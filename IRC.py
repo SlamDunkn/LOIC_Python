@@ -68,7 +68,7 @@ class IRC:
 
     def parseIRCString(self, event):
         string = event.arg
-        if string[0] == "PING":
+        if string.find("PING") == 0:
             self.socket.send("PONG" + string[5:])
             print "PONG", string[5:]
         elif string[0] == ":":
