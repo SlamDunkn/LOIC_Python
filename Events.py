@@ -1,6 +1,5 @@
-import mutex
-
 IRC_RECV = 1
+START_LAZER = 2
 
 class Event:
 
@@ -11,7 +10,7 @@ class Event:
 class Listener:
 
     def __init__(self, typeID, function):
-        self.typeID == typeID
+        self.typeID = typeID
         self.function = function
         
 
@@ -20,14 +19,12 @@ class EventManager:
     def __init__(self):
         self.__eventStack = []
         self.__listeners = []
-        self.__mutex = mutex.mutex()
 
     def signalEvent(self, event):
-        self.__mutex.lock()
+        print "got Event"
         for l in self.__listeners:
             if l.typeID == event.typeID:
                 l.function(event)
-        self.__mutex.unlock()
 
     def addListener(self, listener):
         self.__listeners.append(listener)
@@ -35,6 +32,7 @@ class EventManager:
 ev_Manager = None
 
 def getEventManager():
+    global ev_Manager
     if ev_Manager == None:
         ev_Manager = EventManager()
     return ev_Manager

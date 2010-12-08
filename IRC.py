@@ -21,11 +21,14 @@ class ListenThread(threading.Thread):
 
     def run(self):
         while self.running:
-            self.readBuffer += self.socket.recv(1024)
+            try:
+                self.readBuffer += self.socket.recv(1024)
+            except:
+                pass
 
             while self.readBuffer.find('\n') >= 0:
                 breakPoint = self.readBuffer.find('\n')
-                line = self.readBuffer[0:breakPoint]
+                line = self.readBuffer[0:breakPoint].replace('\r', '')
                 self.readBuffer = self.readBuffer[breakPoint+1:]
                 self.irc.parseIRCString(line)
         
@@ -37,9 +40,11 @@ class IRC:
         self.port = port
         self.channel = channel
         self.socket = socket.socket()
+        self.socket.settimeout(5)
         self.listenThread = ListenThread(self.socket, self)
 
         self.nick = "LOIC_" + randomString(5)
+        self.ops = []
 
         self.socket.connect((self.host, self.port))
         self.socket.send("NICK %s\r\n" % self.nick)
@@ -49,15 +54,32 @@ class IRC:
 
         self.listenThread.start()
 
+    def deleteOp(self, op):
+        self.ops[:] = (value for value in self.ops if value != op)
+
     def parseIRCString(self, string):
         if string[0] == "PING":
             self.socket.send("PONG" + string[5:])
             print "PONG", string[5:]
         elif string[0] == ":":
             print string
-        elif string[0] == "PRIVMSG":
-            info = string[8:].split(" ")
-            print info
+            info = string.split(" ")
+            if info[1] == "PRIVMSG" and info[2] == self.channel:
+                if len(info) > 4 and info[3].lower() == ":!lazer":
+                    name = info[0][1:info[0].find('!')]
+                    if name in self.ops:
+                        event = Event(START_LAZER, info[4:])
+                        getEventManager().signalEvent(event)
+            elif info[1] == "MODE" and info[2] == self.channel:
+                if info[3] == "+o":
+                    self.ops.append(info[4])
+                elif info[3] == "-o":
+                    self.deleteOp(info[4])
+            elif info[2] == self.nick and info[3] == "=" and info[4] == self.channel:
+                for op in info[5:]:
+                    op = op.replace(':', '')
+                    if op[0] == "@":
+                        self.ops.append(op[1:])
         else:
             print "SCRAP", string
 
