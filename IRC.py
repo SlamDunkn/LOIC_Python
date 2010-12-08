@@ -68,7 +68,7 @@ class IRC:
                 if len(info) > 4 and info[3].lower() == ":!lazer":
                     name = info[0][1:info[0].find('!')]
                     if name in self.ops:
-                        event = Event(START_LAZER, info[4:])
+                        event = Event(LAZER_RECV, info[4:])
                         getEventManager().signalEvent(event)
             elif info[1] == "MODE" and info[2] == self.channel:
                 if info[3] == "+o":

@@ -1,5 +1,6 @@
 IRC_RECV = 1
-START_LAZER = 2
+LAZER_RECV = 2
+START_LAZER = 3
 
 class Event:
 

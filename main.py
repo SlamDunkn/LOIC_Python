@@ -2,7 +2,17 @@ import sys, socket, string, random, os
 from Events import *
 from IRC import * 
 
-def lazerHook(event):
+NEED_INFO = 0
+WAITING = 1
+START = 2
+
+UDP_METHOD
+TCP_METHOD
+HTTP_METHOD
+
+status = NEED_INFO
+
+def lazerParseHook(event):
     print event.arg
 
     targetip = None
@@ -11,13 +21,23 @@ def lazerHook(event):
     subsite = None
     message = None
     port = None
-    method = None
-    threads = None
+    method = TCP_METHOD
+    threads = 1
     wait = None
     random = None
     speed = None
 
-    s = event.arg
+    s = []
+    for x in event.arg:
+        t = x.split('=')
+        if len(t) > 1:
+            for y in t:
+                s.append(y)
+        else:
+            if t[0] == "start" and STATUS = WAITING:
+                status = START
+                return
+
     for x in range(0, len(s), 2):
         if s[x] == "targetip":
             targetip = s[x+1]
@@ -41,6 +61,12 @@ def lazerHook(event):
                     port = None
         elif s[x] == "method":
             method = s[x+1]
+            if method == "UDP":
+                method = UDP_METHOD
+            elif method == "HTTP":
+                method = HTTP_METHOD
+            else:
+                method = TCP_METHOD
         elif s[x] == "threads":
             if s[x+1].isdigit():
                 threads = int(s[x+1])
@@ -68,12 +94,23 @@ def lazerHook(event):
                 elif speed < 1:
                     speed = 1
 
+        status = WAITING
+
+def lazerStartHook(event):
+    if status = START:
+        if targetip == None or targethost == None or port == None:
+            print "no target set"
+            return
+        if
 
 def main(args):
     print args
 
-    listener = Listener(START_LAZER, lazerHook)
+    listener = Listener(LAZER_RECV, lazerParseHook)
     getEventManager().addListener(listener)
+    listener = Listener(START_LAZER, lazerStartHook)
+    getEventManager().addListener(listener)
+
     irc = IRC(args[1], int(args[2]), args[3])
 
     while 1:
