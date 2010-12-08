@@ -1,4 +1,4 @@
-import socket, threading, random
+import socket, threading, random, time
 from Events import *
 
 def randomString(length):
@@ -30,7 +30,8 @@ class ListenThread(threading.Thread):
                 breakPoint = self.readBuffer.find('\n')
                 line = self.readBuffer[0:breakPoint].replace('\r', '')
                 self.readBuffer = self.readBuffer[breakPoint+1:]
-                self.irc.parseIRCString(line)
+                event = Event(IRC_RECV, line)
+                getEventManager().signalEvent(event)
         
 
 class IRC:
@@ -41,28 +42,37 @@ class IRC:
         self.channel = channel
         self.socket = socket.socket()
         self.socket.settimeout(5)
-        self.listenThread = ListenThread(self.socket, self)
 
         self.nick = "LOIC_" + randomString(5)
         self.ops = []
 
+        listener = Listener(IRC_RECV, self.parseIRCString)
+        getEventManager().addListener(listener)
+
+        self.connect()
+
+    def connect(self):
+        self.listenThread = ListenThread(self.socket, self)
+
         self.socket.connect((self.host, self.port))
         self.socket.send("NICK %s\r\n" % self.nick)
-        self.socket.send("USER IRCLOIC-Python %s blah :SlamDunk's Remote Python LOIC\r\n" % self.host)
+        self.socket.send("USER IRCLOIC %s blah :SlamDunk's Remote Python LOIC\r\n" % self.host)
 
         self.socket.send("JOIN %s\r\n" % self.channel)
 
         self.listenThread.start()
 
+
     def deleteOp(self, op):
         self.ops[:] = (value for value in self.ops if value != op)
 
-    def parseIRCString(self, string):
+    def parseIRCString(self, event):
+        string = event.arg
         if string[0] == "PING":
             self.socket.send("PONG" + string[5:])
             print "PONG", string[5:]
         elif string[0] == ":":
-            print string
+            #print string
             info = string.split(" ")
             if info[1] == "PRIVMSG" and info[2] == self.channel:
                 if len(info) > 4 and info[3].lower() == ":!lazer":
@@ -80,11 +90,16 @@ class IRC:
                     op = op.replace(':', '')
                     if op[0] == "@":
                         self.ops.append(op[1:])
+                print "Connection succesful, waiting for lazer charge"
         else:
             print "SCRAP", string
+            if string == "ERROR :All connections in use":
+                print "retrying in 5 seconds"
+                self.stop()
+                self.socket = socket.socket()
 
-            #event = Event(IRC_RECV, line)
-            #getEventManager().addEvent(event)
+                event = Event(IRC_RESTART, None)
+                getEventManager().signalEvent(event)
 
     def stop(self):
         self.listenThread.stop()

