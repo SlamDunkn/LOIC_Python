@@ -39,7 +39,6 @@ def lazerParseHook(event):
         else:
             if t[0] == "start" and status == WAITING:
                 status = START
-                return
 
     for x in range(0, len(s), 2):
         if s[x] == "targetip":
@@ -97,7 +96,11 @@ def lazerParseHook(event):
                 elif speed < 1:
                     speed = 1
 
-        status = WAITING
+        if status == START:
+            event = Event(START_LAZER, None)
+            getEventManager().signalEvent(event)
+        else:
+            status = WAITING
 
 def lazerStartHook(event):
     print "FIRING MAH LAZ000000R!"

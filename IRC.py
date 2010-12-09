@@ -54,14 +54,16 @@ class IRC:
     def connect(self):
         self.listenThread = ListenThread(self.socket, self)
 
-        self.socket.connect((self.host, self.port))
-        self.socket.send("NICK %s\r\n" % self.nick)
-        self.socket.send("USER IRCLOIC %s blah :SlamDunk's Remote Python LOIC\r\n" % self.host)
-
-        self.socket.send("JOIN %s\r\n" % self.channel)
+        try:
+            self.socket.connect((self.host, self.port))
+        except:
+            print "Random error connecting, aborting"
+            return
 
         self.listenThread.start()
 
+        self.socket.send("NICK %s\r\n" % self.nick)
+        self.socket.send("USER IRCLOIC %s blah :SlamDunk's Remote Python LOIC\r\n" % self.host)
 
     def deleteOp(self, op):
         self.ops[:] = (value for value in self.ops if value != op)
@@ -69,10 +71,10 @@ class IRC:
     def parseIRCString(self, event):
         string = event.arg
         if string.find("PING") == 0:
-            self.socket.send("PONG" + string[5:])
+            self.socket.send("PONG " + string[5:] + "\r\n")
             print "PONG", string[5:]
         elif string[0] == ":":
-            #print string
+            print string
             info = string.split(" ")
             if info[1] == "PRIVMSG" and info[2] == self.channel:
                 if len(info) > 4 and info[3].lower() == ":!lazer":
@@ -91,6 +93,9 @@ class IRC:
                     if op[0] == "@":
                         self.ops.append(op[1:])
                 print "Connection succesful, waiting for lazer charge"
+            elif info[1] == "002":
+                self.socket.send("JOIN %s\r\n" % self.channel)
+                print "Joining", self.channel
         else:
             print "SCRAP", string
             if string == "ERROR :All connections in use":
