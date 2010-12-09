@@ -42,6 +42,7 @@ class IRC:
         self.channel = channel
         self.socket = socket.socket()
         self.socket.settimeout(5)
+        self.connected = False
 
         self.nick = "LOIC_" + randomString(6)
         self.ops = []
@@ -57,14 +58,30 @@ class IRC:
 
         try:
             self.socket.connect((self.host, self.port))
-        except:
-            print "Random error connecting, aborting"
+        except Exception as e:
+            print "error connecting, aborting", e.args
             return
+
+        self.connected = True
 
         self.listenThread.start()
 
         self.socket.send("NICK %s\r\n" % self.nick)
         self.socket.send("USER IRCLOIC %s blah :Newfag's remote LOIC\r\n" % self.host)
+
+    def changeChannel(self, newchannel):
+        self.socket.send("PART %s\r\n", self.channel)
+        self.socket.send("JOIN %s\r\n", newchannel)
+        self.channel = newchannel
+
+    def disconnect(self):
+        self.connected = False
+        self.stop()
+        self.socket = socket.socket()
+        self.socket.settimeout(5)
+        if self.listenThread and self.listenThread.is_alive():
+            self.listenThread.join()
+        self.listenThread = None
 
     def deleteOp(self, op):
         self.ops[:] = (value for value in self.ops if value != op)
@@ -107,12 +124,12 @@ class IRC:
             print "SCRAP", string
             if string == "ERROR :All connections in use":
                 print "retrying in 5 seconds"
-                self.stop()
-                self.socket = socket.socket()
+                self.disconnect()
 
                 event = Event(IRC_RESTART, None)
                 getEventManager().signalEvent(event)
 
     def stop(self):
-        self.listenThread.stop()
+        if self.listenThread:
+            self.listenThread.stop()
         

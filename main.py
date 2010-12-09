@@ -146,10 +146,10 @@ def lazerStartHook(event):
         flooder.start()
 
 irc = None
+running = True
 def restartIRCHook(event):
     global irc
 
-    irc.listenThread.join()
     time.sleep(5)
     irc.connect()
 
@@ -173,9 +173,32 @@ def main(args):
 
     irc = IRC(host, port, channel)
 
-    while 1:
+    while running:
         i = raw_input()
-        if i == "stopflood":
+        if i.find("connect") == 0:
+            info = i.split(" ")
+            print info
+            if len(info) == 4 and info[2].isdigit():
+                newhost = info[1]
+                newport = int(info[2])
+                newchannel = info[3]
+                if newhost == host and newport == port and irc.connected:
+                    print "changing channel to", newchannel
+                    irc.changeChannel(newchannel)
+                    channel = newchannel
+                else:
+                    host = newhost
+                    port = newport
+                    channel = newchannel
+                    print "changing host to", host, port, channel
+                    irc.disconnect()
+                    irc.host = host
+                    irc.port = port
+                    irc.channel = channel
+                    irc.connect()
+            else:
+                print "not enough info. connect server port channel"
+        elif i == "stopflood":
             if flooder:
                 flooder.stop()
         elif i == "startflood":
@@ -185,7 +208,7 @@ def main(args):
             if flooder:
                 print flooder.floodCount()
         elif i == "quit" or i == "exit":
-            irc.stop()
+            irc.disconnect()
             if flooder:
                 flooder.stop()
             getEventManager().stop()
