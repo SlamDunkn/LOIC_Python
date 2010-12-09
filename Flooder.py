@@ -36,6 +36,8 @@ class TCPWorkerThread(Process):
                     print "thread", self.id, "connected"
                     break
                 except Exception as e:
+                    if e.args[0] == 106:
+                        break
                     print "Couldn't connect:", e.args, self.flooder.host, self.flooder.port
                     time.sleep(1)
                     continue
