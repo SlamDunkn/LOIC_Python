@@ -33,6 +33,7 @@ class TCPWorkerThread:
             try:
                 self.socket.connect((self.flooder.host, self.flooder.port))
                 print "thread", self.id, "connected"
+                break
             except:
                 time.sleep(1)
                 continue
