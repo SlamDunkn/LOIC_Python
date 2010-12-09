@@ -47,12 +47,15 @@ class TCPWorkerThread(Process):
             while self.running:
                 try:
                     #self.flooder.increaseFlood()
-                    self.socket.send(self.message)
+                    bytes = self.socket.send(self.message)
+                    print "thread", self.id, "has sent", bytes, "bytes"
                     if self.flooder.wait != None and self.flooder.wait != False:
                         print "thread", self.id, "sleeping for", self.flooder.wait
                         time.sleep(self.flooder.wait)
                 except Exception as e:
-                    if e.args[0] == 32:
+                    if e.args[0] == 32 or e.args[0] == 104:
+                        print "thread", self.id ,"connection broken, retrying."
+                        self.socket = socket.socket()
                         break
                     print "Couldn't send message on thread", self.id, "because", e.args
                     time.sleep(0.1)
