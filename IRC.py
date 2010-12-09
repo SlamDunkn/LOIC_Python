@@ -2,7 +2,7 @@ import socket, threading, random, time
 from Events import *
 
 def randomString(length):
-    allowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+    allowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
     string = ''.join(random.choice(allowedChars) for i in xrange(length))
     return string
 
@@ -43,8 +43,9 @@ class IRC:
         self.socket = socket.socket()
         self.socket.settimeout(5)
 
-        self.nick = "LOIC_" + randomString(5)
+        self.nick = "LOIC_" + randomString(6)
         self.ops = []
+        print "Nick:", self.nick
 
         listener = Listener(IRC_RECV, self.parseIRCString)
         getEventManager().addListener(listener)
@@ -63,7 +64,7 @@ class IRC:
         self.listenThread.start()
 
         self.socket.send("NICK %s\r\n" % self.nick)
-        self.socket.send("USER IRCLOIC %s blah :SlamDunk's Remote Python LOIC\r\n" % self.host)
+        self.socket.send("USER IRCLOIC %s blah :Newfag's remote LOIC\r\n" % self.host)
 
     def deleteOp(self, op):
         self.ops[:] = (value for value in self.ops if value != op)
@@ -77,25 +78,31 @@ class IRC:
             print string
             info = string.split(" ")
             if info[1] == "PRIVMSG" and info[2] == self.channel:
-                if len(info) > 4 and info[3].lower() == ":!lazer":
+                if len(info) > 4 and info[3].lower() == ":!lazor":
                     name = info[0][1:info[0].find('!')]
                     if name in self.ops:
                         event = Event(LAZER_RECV, info[4:])
                         getEventManager().signalEvent(event)
+            elif info[2] == self.nick and info[3] == self.channel:
+                if len(info) > 5 and info[4].lower() == ":!lazor":
+                    print "LAZOR"
+                    event = Event(LAZER_RECV, info[4:])
+                    getEventManager().signalEvent(event)
             elif info[1] == "MODE" and info[2] == self.channel:
                 if info[3] == "+o":
                     self.ops.append(info[4])
                 elif info[3] == "-o":
                     self.deleteOp(info[4])
-            elif info[2] == self.nick and info[3] == "=" and info[4] == self.channel:
+            elif info[2] == self.nick and (info[3] == "=" or info[3] == "@") and info[4] == self.channel:
                 for op in info[5:]:
+                    if len(op) == 0:
+                        continue
                     op = op.replace(':', '')
                     if op[0] == "@":
                         self.ops.append(op[1:])
-                print "Connection succesful, waiting for lazer charge"
+                print "Connection succesful"
             elif info[1] == "002":
                 self.socket.send("JOIN %s\r\n" % self.channel)
-                print "Joining", self.channel
         else:
             print "SCRAP", string
             if string == "ERROR :All connections in use":
