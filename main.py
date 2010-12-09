@@ -174,40 +174,47 @@ def main(args):
     irc = IRC(host, port, channel)
 
     while running:
-        i = raw_input()
-        if i.find("connect") == 0:
-            info = i.split(" ")
-            print info
-            if len(info) == 4 and info[2].isdigit():
-                newhost = info[1]
-                newport = int(info[2])
-                newchannel = info[3]
-                if newhost == host and newport == port and irc.connected:
-                    print "changing channel to", newchannel
-                    irc.changeChannel(newchannel)
-                    channel = newchannel
+        try:
+            i = raw_input()
+            if i.find("connect") == 0:
+                info = i.split(" ")
+                print info
+                if len(info) == 4 and info[2].isdigit():
+                    newhost = info[1]
+                    newport = int(info[2])
+                    newchannel = info[3]
+                    if newhost == host and newport == port and irc.connected:
+                        print "changing channel to", newchannel
+                        irc.changeChannel(newchannel)
+                        channel = newchannel
+                    else:
+                        host = newhost
+                        port = newport
+                        channel = newchannel
+                        print "changing host to", host, port, channel
+                        irc.disconnect()
+                        irc.host = host
+                        irc.port = port
+                        irc.channel = channel
+                        irc.connect()
                 else:
-                    host = newhost
-                    port = newport
-                    channel = newchannel
-                    print "changing host to", host, port, channel
-                    irc.disconnect()
-                    irc.host = host
-                    irc.port = port
-                    irc.channel = channel
-                    irc.connect()
-            else:
-                print "not enough info. connect server port channel"
-        elif i == "stopflood":
-            if flooder:
-                flooder.stop()
-        elif i == "startflood":
-            if flooder:
-                flooder.start()
-        elif i == "floodcount":
-            if flooder:
-                print flooder.floodCount()
-        elif i == "quit" or i == "exit":
+                    print "not enough info. connect server port channel"
+            elif i == "stopflood":
+                if flooder:
+                    flooder.stop()
+            elif i == "startflood":
+                if flooder:
+                    flooder.start()
+            elif i == "floodcount":
+                if flooder:
+                    print flooder.floodCount()
+            elif i == "quit" or i == "exit":
+                irc.disconnect()
+                if flooder:
+                    flooder.stop()
+                getEventManager().stop()
+                break
+        except KeyboardInterrupt:
             irc.disconnect()
             if flooder:
                 flooder.stop()
