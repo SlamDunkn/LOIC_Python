@@ -34,7 +34,8 @@ class TCPWorkerThread:
                 self.socket.connect((self.flooder.host, self.flooder.port))
                 print "thread", self.id, "connected"
                 break
-            except:
+            except Exception as e:
+                print "Couldn't connect:", e.args, self.flooder.host, self.flooder.port
                 time.sleep(1)
                 continue
             break
@@ -44,10 +45,11 @@ class TCPWorkerThread:
             try:
                 self.floodCount += 1
                 self.socket.send(self.message)
+                print "thread", self.id, "count", self.floodCount
                 if self.flooder.wait != None and self.flooder.wait != False:
                     print "thread", self.id, "sleeping for", self.flooder.wait
                     time.sleep(self.flooder.wait)
-            except:
+            except Exception as e:
                 pass
 
 class Flooder:
@@ -100,3 +102,11 @@ class Flooder:
             t.stop()
             floodCount += t.floodCount
         print "final floodcount:", floodCount
+
+    def floodCount(self):
+        floodCount = 0
+
+        for t in self.__threads:
+            floodCount += t.floodCount
+
+        return floodCount

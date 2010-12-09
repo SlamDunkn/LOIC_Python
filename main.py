@@ -138,9 +138,9 @@ def lazerStartHook(event):
 
         host = None
         if targetip == None:
-            host = targetip
-        else:
             host = targethost
+        else:
+            host = targetip
 
         flooder = Flooder(host, port, timeout, method, threads, subsite, message, random, wait)
         flooder.start()
@@ -181,6 +181,9 @@ def main(args):
         elif i == "startflood":
             if flooder:
                 flooder.start()
+        elif i == "floodcount":
+            if flooder:
+                print flooder.floodCount()
         elif i == "quit" or i == "exit":
             irc.stop()
             if flooder:
