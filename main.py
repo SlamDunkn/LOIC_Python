@@ -167,7 +167,7 @@ def main(args):
     port = int(args[2])
     channel = args[3]
     if channel[0] != '#':
-        channel = '#' + self.channel
+        channel = '#' + channel
 
     getEventManager().start()
 
