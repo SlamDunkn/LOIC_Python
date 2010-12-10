@@ -1,7 +1,7 @@
 import sys, socket, string, random, os, time
-from Events import *
-from IRC import * 
-from Flooder import *
+from Core.Events import *
+from Core.IRC import * 
+from Core.Flooder import *
 
 NEED_INFO = 0
 WAITING = 1
