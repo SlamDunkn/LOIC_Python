@@ -48,8 +48,8 @@ class TCPWorkerThread(Process):
                     try:
                         bytes = self.socket.send(self.message)
                         self.byteCount += bytes
-                        if self.flooder.wait != None and self.flooder.wait != False:
-                            time.sleep(self.flooder.wait)
+                        if self.flooder.wait:
+                            time.sleep(1)
                     except Exception as e:
                         if e.args[0] == 32 or e.args[0] == 104:
                             print "thread", self.id ,"connection broken, retrying."
