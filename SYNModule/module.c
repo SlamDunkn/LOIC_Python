@@ -91,7 +91,7 @@ static PyObject * synmod_init(PyObject *self, PyObject* args)
         return PyInt_FromLong(0L);;
     }
 
-    ok = inet_pton(AF_INET, dest_addr, conv_dest_addr);
+    ok = inet_pton(AF_INET, dest_addr, &conv_dest_addr);
 
     if(!ok)
     {
