@@ -196,7 +196,7 @@ def main(args):
                 if len(info) == 4 and info[2].isdigit():
                     newhost = info[1]
                     newport = int(info[2])
-                    newchannel = info[3]
+                    newchannel = info[3].replace("\\", "")
                     if newhost == host and newport == port and irc.connected:
                         print "changing channel to", newchannel
                         irc.changeChannel(newchannel)

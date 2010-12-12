@@ -25,16 +25,19 @@ class Flooder:
         self.byteCount = Queue.Queue()
         self.srchost = srchost
         self.srcport = srcport
+        self.initsuccess = True
 
         if method == TCP_METHOD or method == UDP_METHOD:
             if message == None and random == False:
                 print "Message missing, not starting."
                 return
         elif method == SYN_METHOD:
-            synmod.init(srchost, srcport, host, port)
+            ret = synmod.init(srchost, srcport, host, port)
+            if ret == 0:
+                self.initsuccess = False
 
     def start(self):
-        if len(self.__processes) > 0:
+        if len(self.__processes) > 0 or not self.initsuccess:
             return
 
         for x in range(self.threadsAmount):

