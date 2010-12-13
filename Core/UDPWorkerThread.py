@@ -20,6 +20,8 @@ class UDPWorkerThread(Process):
         else:
             self.message = self.flooder.message
 
+        print "initialized udp thread"
+
     def stop(self):
         self.running = False
 
@@ -27,9 +29,9 @@ class UDPWorkerThread(Process):
         try:
             try:
 	            self.socket.connect((self.host, self.port))
-	            print "thread", self.id, "connected"
+	            #print "thread", self.id, "connected"
             except Exception as e:
-	            print "Couldn't connect:", e.args, self.host, self.port
+	            #print "Couldn't connect:", e.args, self.host, self.port
 	            return
 
             while self.running:
@@ -39,7 +41,7 @@ class UDPWorkerThread(Process):
                     if self.wait:
                         time.sleep(1)
                 except Exception as e:
-                    print "Couldn't send message on thread", self.id, "because", e.args
+                    #print "Couldn't send message on thread", self.id, "because", e.args
                     time.sleep(0.1)
                     pass
         except KeyboardInterrupt:

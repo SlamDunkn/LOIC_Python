@@ -16,6 +16,8 @@ class SYNWorkerThread(Process):
         
         if self.socket == -1:
             self.running = False
+
+        print "initialized syn thread"
         
     def stop(self):
         self.running = False

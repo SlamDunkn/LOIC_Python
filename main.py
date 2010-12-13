@@ -21,7 +21,7 @@ timeout = None
 subsite = None
 message = None
 port = None
-method = TCP_METHOD
+method = []
 threads = 1
 wait = None
 random = None
@@ -48,7 +48,7 @@ def lazerParseHook(event):
                 subsite = "/"
                 port = 80
                 message = "U dun goofed"
-                method = TCP_METHOD
+                method.append(TCP_METHOD)
                 speed = 0
                 random = False
                 srchost = "192.168.0.1"
@@ -78,15 +78,17 @@ def lazerParseHook(event):
                 elif port < 1:
                     port = None
         elif s[x] == "method":
-            method = s[x+1]
-            if method.upper() == "UDP":
-                method = UDP_METHOD
-            elif method.upper() == "HTTP":
-                method = HTTP_METHOD
-            elif method.upper() == "SYN":
-                method = SYN_METHOD
-            else:
-                method = TCP_METHOD
+            methodTemp = s[x+1].split(",")
+            method = []
+            for x in methodTemp:
+                if x.upper() == "UDP":
+                    method.append(UDP_METHOD)
+                elif x.upper() == "HTTP":
+                    method.append(HTTP_METHOD)
+                elif x.upper() == "SYN":
+                    method.append(SYN_METHOD)
+                else:
+                    method.append(TCP_METHOD)
         elif s[x] == "threads":
             if s[x+1].isdigit():
                 threads = int(s[x+1])
@@ -143,7 +145,7 @@ def lazerStartHook(event):
         if timeout == None:
             print "Missing required timeout"
             return
-        if method == None:
+        if len(method) == 0:
             print "Missing required method"
             return
         if threads == None:

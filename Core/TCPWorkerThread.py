@@ -21,6 +21,8 @@ class TCPWorkerThread(Process):
         else:
             self.message = self.flooder.message
 
+        print "initialized tcp thread"
+
     def stop(self):
         self.running = False
 
@@ -30,12 +32,12 @@ class TCPWorkerThread(Process):
                 while self.running:
                     try:
                         self.socket.connect((self.host, self.port))
-                        print "thread", self.id, "connected"
+                        #print "thread", self.id, "connected"
                         break
                     except Exception as e:
                         if e.args[0] == 106 or e.args[0] == 60:
                             break
-                        print "Couldn't connect:", e.args, self.host, self.port
+                        #print "Couldn't connect:", e.args, self.host, self.port
                         time.sleep(1)
                         continue
                     break
@@ -48,10 +50,10 @@ class TCPWorkerThread(Process):
                             time.sleep(1)
                     except Exception as e:
                         if e.args[0] == 32 or e.args[0] == 104:
-                            print "thread", self.id ,"connection broken, retrying."
+                            #print "thread", self.id ,"connection broken, retrying."
                             self.socket = socket.socket()
                             break
-                        print "Couldn't send message on thread", self.id, "because", e.args
+                        #print "Couldn't send message on thread", self.id, "because", e.args
                         time.sleep(0.1)
                         pass
         except KeyboardInterrupt:

