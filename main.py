@@ -177,9 +177,13 @@ def main(args):
     listener = Listener(IRC_RESTART, restartIRCHook)
     getEventManager().addListener(listener)
 
-    host = args[1]
-    port = int(args[2])
-    channel = args[3]
+    try:
+        host = args[1]
+        port = int(args[2])
+        channel = args[3]
+    except:
+        print "usage: pyloic <hivemind irc server> <irc port> <irc channel>"
+        sys.exit()
     if channel[0] != '#':
         channel = '#' + channel
 

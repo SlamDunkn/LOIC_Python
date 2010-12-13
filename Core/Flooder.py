@@ -33,8 +33,10 @@ class Flooder:
                 return
         elif method == SYN_METHOD:
             ret = synmod.init(srchost, srcport, host, port)
-            if ret == 0:
+            if ret == -1:
                 self.initsuccess = False
+            else:
+                print "synmod init success"
 
     def start(self):
         if len(self.__processes) > 0 or not self.initsuccess:

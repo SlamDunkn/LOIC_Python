@@ -9,7 +9,9 @@ class UDPWorkerThread(Process):
         self.id = id
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-        self.flooder = flooder
+        self.host = flooder.host
+        self.port = flooder.port
+        self.wait = flooder.wait
         self.running = True
         self.byteCount = 0
 
@@ -20,25 +22,21 @@ class UDPWorkerThread(Process):
 
     def stop(self):
         self.running = False
-        try:
-            self.flooder.byteCount.put(self.byteCount, True, 5)
-        except:
-            pass
 
     def run(self):
         try:
             try:
-	            self.socket.connect((self.flooder.host, self.flooder.port))
+	            self.socket.connect((self.host, self.port))
 	            print "thread", self.id, "connected"
             except Exception as e:
-	            print "Couldn't connect:", e.args, self.flooder.host, self.flooder.port
+	            print "Couldn't connect:", e.args, self.host, self.port
 	            return
 
             while self.running:
                 try:
                     bytes = self.socket.send(self.message)
                     self.byteCount += bytes
-                    if self.flooder.wait:
+                    if self.wait:
                         time.sleep(1)
                 except Exception as e:
                     print "Couldn't send message on thread", self.id, "because", e.args

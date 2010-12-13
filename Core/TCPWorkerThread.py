@@ -10,7 +10,9 @@ class TCPWorkerThread(Process):
         self.socket = socket.socket()
         self.socket.setblocking(1)
 
-        self.flooder = flooder
+        self.host = flooder.host
+        self.port = flooder.port
+        self.wait = flooder.wait
         self.running = True
         self.byteCount = 0
 
@@ -21,25 +23,19 @@ class TCPWorkerThread(Process):
 
     def stop(self):
         self.running = False
-        #print "adding", self.byteCount
-        try:
-            self.flooder.byteCount.put(self.byteCount, True, 5) #why the fuck does this not work when called by flooder?
-        except:
-            #print "failed to add"
-            pass
 
     def run(self):
         try:
             while self.running:
                 while self.running:
                     try:
-                        self.socket.connect((self.flooder.host, self.flooder.port))
+                        self.socket.connect((self.host, self.port))
                         print "thread", self.id, "connected"
                         break
                     except Exception as e:
                         if e.args[0] == 106 or e.args[0] == 60:
                             break
-                        print "Couldn't connect:", e.args, self.flooder.host, self.flooder.port
+                        print "Couldn't connect:", e.args, self.host, self.port
                         time.sleep(1)
                         continue
                     break
@@ -48,7 +44,7 @@ class TCPWorkerThread(Process):
                     try:
                         bytes = self.socket.send(self.message)
                         self.byteCount += bytes
-                        if self.flooder.wait:
+                        if self.wait:
                             time.sleep(1)
                     except Exception as e:
                         if e.args[0] == 32 or e.args[0] == 104:

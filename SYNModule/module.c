@@ -42,8 +42,6 @@ unsigned short csum(unsigned short *ptr,int nbytes) {
     return(answer);
 }
 
-//Socket
-int s;
 //Datagram to represent the packet
 char datagram[4096];
 //IP header
@@ -55,6 +53,16 @@ struct pseudo_header psh;
 
 static PyObject * synmod_send(PyObject *self, PyObject* args)
 {
+    int s, ok;
+	
+    ok = PyArg_ParseTuple(args, "i", &s);
+
+    if(!ok)
+    {
+        printf("Python parsing failed\r\n");
+        return PyInt_FromLong(-1L);
+    }
+
     if (sendto (s,      /* our socket */
                 datagram,   /* the buffer containing headers and data */
                 iph->ip_len,    /* total length of our datagram */
@@ -65,6 +73,31 @@ static PyObject * synmod_send(PyObject *self, PyObject* args)
         printf("error\r\n");
 
     return PyInt_FromLong(42L);
+}
+
+static PyObject * synmod_createSocket(PyObject *self, PyObject* args)
+{
+    int s = 0;
+    
+    //Create a raw socket
+    if((s = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0)
+    {
+        printf("socket creation failed\r\n",);
+        return PyInt_FromLong(-1L);
+    }
+    
+    //IP_HDRINCL to tell the kernel that headers are included in the packet
+    {
+        int one = 1;
+        const int *val = &one;
+        if (setsockopt(s, IPPROTO_IP, IP_HDRINCL, (char *)val, sizeof(one)) < 0)
+        {
+            printf("Failed to set HDRINCL\r\n");
+            return PyInt_FromLong(-1L);
+        }
+    }
+
+    return PyInt_FromLong(s);
 }
 
 static PyObject * synmod_init(PyObject *self, PyObject* args)
@@ -98,9 +131,6 @@ static PyObject * synmod_init(PyObject *self, PyObject* args)
         printf("dest_addr conversion failed\r\n");
         return PyInt_FromLong(0L);;
     }
-
-    //Create a raw socket
-    s = socket(PF_INET, SOCK_RAW, IPPROTO_TCP);
  
     sin2.sin_family = AF_INET; //dest addr
     sin2.sin_port = htons(dest_port);
@@ -113,9 +143,9 @@ static PyObject * synmod_init(PyObject *self, PyObject* args)
     iph->ip_v = 4;
     iph->ip_tos = 0;
     iph->ip_len = sizeof(struct ip) + sizeof(struct tcphdr);
-    iph->ip_id = htonl(54321); //Id of this packet
+    iph->ip_id = htonl(rand()); //Id of this packet
     iph->ip_off = 0;
-    iph->ip_ttl = 255;
+    iph->ip_ttl = rand()%256;
     iph->ip_p = IPPROTO_TCP;
     iph->ip_sum = 0;      //Set to 0 before calculating checksum
     iph->ip_src = conv_src_addr;  //Spoof the source ip address
@@ -126,7 +156,7 @@ static PyObject * synmod_init(PyObject *self, PyObject* args)
     //TCP Header
     tcph->th_sport = htons(src_port);
     tcph->th_dport = htons(dest_port);
-    tcph->th_seq = 0;
+    tcph->th_seq = rand();
     tcph->th_ack = 0;
     tcph->th_off = 5;      /* first and only tcp segment */
     /*tcph->fin=0;
@@ -136,11 +166,13 @@ static PyObject * synmod_init(PyObject *self, PyObject* args)
     tcph->ack=0;
     tcph->urg=0;*/
     tcph->th_flags = TH_SYN;
-    tcph->th_win = htons(5840); /* maximum allowed window size */
+    tcph->th_win = htons(rand()%5000); /* maximum allowed window size */
     tcph->th_sum = 0;/* if you set a checksum to zero, your kernel's IP stack
                 should fill in the correct checksum during transmission */
     tcph->th_urp = 0;
     //Now the IP checksum
+
+    printf("Filled in the headers\r\n");
  
     psh.source_address = inet_addr(src_addr);
     psh.dest_address = sin2.sin_addr.s_addr;
@@ -151,24 +183,13 @@ static PyObject * synmod_init(PyObject *self, PyObject* args)
     memcpy(&psh.tcp , tcph , sizeof(struct tcphdr));
  
     tcph->th_sum = csum((unsigned short*) &psh , sizeof(struct pseudo_header));
- 
-    //IP_HDRINCL to tell the kernel that headers are included in the packet
-    {
-        int one = 1;
-        const int *val = &one;
-        if (setsockopt(s, IPPROTO_IP, IP_HDRINCL, val, sizeof(one)) < 0)
-        {
-            printf("Warning: Cannot set HDRINCL!\r\n");
-            return PyInt_FromLong(0L);
-        }
-    }
 
     return PyInt_FromLong(42L);
 }
 
-
 static PyMethodDef SYNModMethods[] = {
     {"init",  synmod_init, METH_VARARGS, ""},
+    {"createSocket",  synmod_createSocket, METH_VARARGS, ""},
     {"send",  synmod_send, METH_VARARGS, ""},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };

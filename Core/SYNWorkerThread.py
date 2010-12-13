@@ -1,4 +1,4 @@
-import socket, time
+import time
 from Functions import *
 from multiprocessing import Process
 import synmod
@@ -9,18 +9,24 @@ class SYNWorkerThread(Process):
         Process.__init__(self)
         self.id = id
 
-        self.flooder = flooder
+        self.wait = flooder.wait
         self.running = True
         self.byteCount = 0
-
+        self.socket = synmod.createSocket()
+        
+        if self.socket == -1:
+            self.running = False
+        
     def stop(self):
         self.running = False
 
     def run(self):
         try:
             while self.running:
-                synmod.send()
-                if self.flooder.wait:
+                ret = synmod.send(self.socket)
+                if ret == -1:
+                    self.running = False
+                if self.wait:
                     time.sleep(1)
         except KeyboardInterrupt:
             return
