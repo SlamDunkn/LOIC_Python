@@ -41,4 +41,3 @@ class SYNWorkerThread(Process):
     def __setstate__(self, dict):
         self.__dict__.update(dict)
         self.socket = synmod.createSocket()
-        self.socket.setblocking(1)
