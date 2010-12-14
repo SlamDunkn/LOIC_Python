@@ -58,3 +58,13 @@ class TCPWorkerThread(Process):
                         pass
         except KeyboardInterrupt:
             return
+
+    def __getstate__(self):
+        odict = self.__dict__.copy() # copy the dict since we change it
+        del odict['socket']              # remove filehandle entry
+        return odict
+
+    def __setstate__(self, dict):
+        self.__dict__.update(dict)   # update attributes
+        self.socket = socket.socket()
+        self.socket.setblocking(1)
