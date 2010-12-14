@@ -46,3 +46,13 @@ class UDPWorkerThread(Process):
                     pass
         except KeyboardInterrupt:
             return
+
+    def __getstate__(self):
+        odict = self.__dict__.copy()
+        del odict['socket']
+        return odict
+
+    def __setstate__(self, dict):
+        self.__dict__.update(dict)
+        self.socket = socket.socket()
+        self.socket.setblocking(1)

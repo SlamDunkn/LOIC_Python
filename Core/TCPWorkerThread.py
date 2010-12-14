@@ -60,11 +60,11 @@ class TCPWorkerThread(Process):
             return
 
     def __getstate__(self):
-        odict = self.__dict__.copy() # copy the dict since we change it
-        del odict['socket']              # remove filehandle entry
+        odict = self.__dict__.copy()
+        del odict['socket']
         return odict
 
     def __setstate__(self, dict):
-        self.__dict__.update(dict)   # update attributes
+        self.__dict__.update(dict)
         self.socket = socket.socket()
         self.socket.setblocking(1)
