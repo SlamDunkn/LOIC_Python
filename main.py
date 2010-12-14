@@ -2,15 +2,7 @@ import sys, socket, string, random, os, time
 from Core.Events import *
 from Core.IRC import * 
 from Core.Flooder import *
-
-NEED_INFO = 0
-WAITING = 1
-START = 2
-
-UDP_METHOD = 0
-TCP_METHOD = 1
-HTTP_METHOD = 2
-SYN_METHOD = 3
+from Core.Globals import *
 
 status = NEED_INFO
 flooder = None

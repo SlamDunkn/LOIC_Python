@@ -1,6 +1,6 @@
 from multiprocessing import Queue
 from Events import *
-from main import *
+from Globals import *
 from UDPWorkerThread import *
 from TCPWorkerThread import *
 from SYNWorkerThread import *
@@ -17,7 +17,6 @@ class Flooder:
         self.threadsAmount = threads
         self.__processes = []
         self.wait = wait
-        self.speed = speed
         self.subsite = subsite
         self.message = message
         self.random = random
