@@ -66,8 +66,8 @@ class IRC:
         self.socket.send("USER IRCLOIC %s blah :Newfag's remote LOIC\r\n" % self.host)
 
     def changeChannel(self, newchannel):
-        self.socket.send("PART %s\r\n", self.channel)
-        self.socket.send("JOIN %s\r\n", newchannel)
+        self.socket.send("PART %s\r\n" % self.channel)
+        self.socket.send("JOIN %s\r\n" % newchannel)
         self.channel = newchannel
 
     def disconnect(self):
