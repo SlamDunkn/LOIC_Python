@@ -50,9 +50,9 @@ def lazerParseHook(event):
 
     for x in range(0, len(s), 2):
         if s[x] == "targetip":
-            targetip = s[x+1]
+            targetip = socket.gethostbyname(s[x+1])
         elif s[x] == "targethost":
-            targethost = s[x+1]
+            targethost = socket.gethostbyname(s[x+1])
         elif s[x] == "timeout":
             if s[x+1].isdigit():
                 timeout = int(s[x+1])
