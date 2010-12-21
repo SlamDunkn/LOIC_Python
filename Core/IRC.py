@@ -88,7 +88,7 @@ class IRC:
             self.socket.send("PONG " + string[5:] + "\r\n")
             print "PONG", string[5:]
         elif string[0] == ":":
-            print string
+            #print string
             info = string.split(" ")
             if info[1] == "PRIVMSG" and info[2] == self.channel:
                 if len(info) > 4 and info[3].lower() == ":!lazor":

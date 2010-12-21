@@ -15,7 +15,6 @@ class HTTPWorkerThread(Process):
         self.host = flooder.host
         self.port = flooder.port
         self.running = True
-        self.floodCount = 0
 
         self.useragents = {1 : 'Mozilla/4.0 (compatible; MSIE 9.0; Windows NT 5.1; Trident/5.0)',
                 2 : 'Mozilla/5.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0; .NET CLR 1.1.4322; .NET CLR 2.0.50727)',

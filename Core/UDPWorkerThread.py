@@ -13,7 +13,8 @@ class UDPWorkerThread(Process):
         self.port = flooder.port
         self.wait = flooder.wait
         self.running = True
-        self.byteCount = 0
+        self.byteCount = flooder.byteCount
+        self.tempBytes = 0
 
         if flooder.random:
             self.message = randomString(256)
@@ -34,12 +35,17 @@ class UDPWorkerThread(Process):
 	            #print "Couldn't connect:", e.args, self.host, self.port
 	            return
 
+            i = 0
             while self.running:
                 try:
                     bytes = self.socket.send(self.message)
-                    self.byteCount += bytes
+                    self.tempBytes += bytes
                     if self.wait:
                         time.sleep(0.01)
+                    i += 1
+                    if i % 10 == 0:
+                        self.byteCount.value += self.tempBytes
+                        self.tempBytes = 0
                 except Exception as e:
                     #print "Couldn't send message on thread", self.id, "because", e.args
                     time.sleep(0.1)

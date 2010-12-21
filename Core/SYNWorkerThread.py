@@ -31,6 +31,7 @@ class SYNWorkerThread(Process):
                 if self.wait:
                     time.sleep(1)
         except KeyboardInterrupt:
+            self.running = False
             return
 
     def __getstate__(self):

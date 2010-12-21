@@ -14,7 +14,8 @@ class TCPWorkerThread(Process):
         self.port = flooder.port
         self.wait = flooder.wait
         self.running = True
-        self.byteCount = 0
+        self.byteCount = flooder.byteCount
+        self.tempBytes = 0
 
         if flooder.random:
             self.message = randomString(256)
@@ -42,12 +43,17 @@ class TCPWorkerThread(Process):
                         continue
                     break
 
+                i = 0
                 while self.running:
                     try:
                         bytes = self.socket.send(self.message)
-                        self.byteCount += bytes
+                        self.tempBytes += bytes
                         if self.wait:
                             time.sleep(0.01)
+                        i += 1
+                        if i % 10 == 0:
+                            self.byteCount.value += self.tempBytes
+                            self.tempBytes = 0
                     except Exception as e:
                         if e.args[0] == 32 or e.args[0] == 104:
                             #print "thread", self.id ,"connection broken, retrying."

