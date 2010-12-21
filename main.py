@@ -8,7 +8,6 @@ status = NEED_INFO
 flooder = None
 
 targetip = None
-targethost = None
 timeout = None
 subsite = None
 message = None
@@ -23,7 +22,7 @@ srcport = None
 
 
 def lazerParseHook(event):
-    global status, flooder, targetip, targethost, timeout, subsite, message, port, method, threads, wait, random, speed, srchost, srcport
+    global status, flooder, targetip, timeout, subsite, message, port, method, threads, wait, random, speed, srchost, srcport
     print event.arg
 
     s = []
@@ -49,10 +48,8 @@ def lazerParseHook(event):
     print "Splitting finished, status:", status
 
     for x in range(0, len(s), 2):
-        if s[x] == "targetip":
+        if s[x] == "targetip" or s[x] == "targethost":
             targetip = socket.gethostbyname(s[x+1])
-        elif s[x] == "targethost":
-            targethost = socket.gethostbyname(s[x+1])
         elif s[x] == "timeout":
             if s[x+1].isdigit():
                 timeout = int(s[x+1])

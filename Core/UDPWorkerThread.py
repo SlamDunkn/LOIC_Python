@@ -39,7 +39,7 @@ class UDPWorkerThread(Process):
                     bytes = self.socket.send(self.message)
                     self.byteCount += bytes
                     if self.wait:
-                        time.sleep(1)
+                        time.sleep(0.01)
                 except Exception as e:
                     #print "Couldn't send message on thread", self.id, "because", e.args
                     time.sleep(0.1)

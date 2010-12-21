@@ -47,7 +47,7 @@ class TCPWorkerThread(Process):
                         bytes = self.socket.send(self.message)
                         self.byteCount += bytes
                         if self.wait:
-                            time.sleep(1)
+                            time.sleep(0.01)
                     except Exception as e:
                         if e.args[0] == 32 or e.args[0] == 104:
                             #print "thread", self.id ,"connection broken, retrying."
