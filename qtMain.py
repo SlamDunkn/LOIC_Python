@@ -260,7 +260,7 @@ class main(QMainWindow):
         self.srchost = str(tab.srchost.text())
         self.srcport = int(tab.srcport.text())
 
-        self.flooder = Flooder(self.targetip, self.port, self.timeout, self.method, self.threads, self.subsite, self.message, self.random, self.wait, self.srchost, self.srcport)
+        self.flooder = Flooder(self.targetip, self.port, self.timeout, self.method, self.threads, self.subsite, self.message, self.random, self.wait, self.srchost, self.srcport, "127.0.0.1", 9050)
         self.flooder.start()
 
     def lazerParseHook(self, event):
@@ -382,7 +382,7 @@ class main(QMainWindow):
                 print "Missing required thread amount"
                 return
 
-            self.flooder = Flooder(self.targetip, self.port, self.timeout, self.method, self.threads, self.subsite, self.message, self.random, self.wait, self.srchost, self.srcport)
+            self.flooder = Flooder(self.targetip, self.port, self.timeout, self.method, self.threads, self.subsite, self.message, self.random, self.wait, self.srchost, self.srcport, "127.0.0.1", 9050)
             self.flooder.start()
 
     def restartIRCHook(self, event):
