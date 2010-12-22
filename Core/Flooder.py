@@ -9,7 +9,7 @@ import synmod
 
 class Flooder:
 
-    def __init__(self, host, port, timeout, method, threads, subsite, message, Random, wait, srchost, srcport):
+    def __init__(self, host, port, timeout, method, threads, subsite, message, Random, wait, srchost, srcport, socks5ip, socks5port):
         self.host = host
         self.port = port
         self.timeout = timeout
@@ -24,7 +24,8 @@ class Flooder:
         self.srchost = srchost
         self.srcport = srcport
         self.initsuccess = True
-
+        self.socks5ip = socks5ip
+        self.socks5port = socks5port
         self.byteCount = Value('i', 0)
 
         if host == "127.0.0.1" or host == "localhost":
