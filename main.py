@@ -171,7 +171,7 @@ def main(args):
             try:
                 opts, argv = getopt.getopt(args[4:], "ts:", ["tor","socks5="])
             except getopt.GetoptError:
-                print "Usage: pyloic <hivemind irc server> <irc port> <irc channel> [--tor] [--socks5=ip:port]"
+                print "Usage: python main.py <hivemind irc server> <irc port> <irc channel> [--tor] [--socks5=ip:port]"
                 sys.exit()
 
             for o, a in opts:
@@ -184,7 +184,7 @@ def main(args):
                     socks5port = int(socks5[1])
 
     except getopt.GetoptError:
-        print "usage: pyloic <hivemind irc server> <irc port> <irc channel> [--tor] [--socks5=ip:port]"
+        print "Usage: python main.py <hivemind irc server> <irc port> <irc channel> [--tor] [--socks5=ip:port]"
         sys.exit()
 
     if channel[0] != '#':
