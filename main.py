@@ -19,8 +19,8 @@ random = None
 speed = None
 srchost = None
 srcport = None
-socks5ip = None
-socks5port = None
+socks5ip = "127.0.0.1"
+socks5port = 9050
 
 def lazerParseHook(event):
     global status, flooder, targetip, timeout, subsite, message, port, method, threads, wait, random, speed, srchost, srcport
