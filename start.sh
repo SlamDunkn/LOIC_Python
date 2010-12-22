@@ -5,4 +5,4 @@ if [ ! -f Core/synmod.so ]; then
     mv synmod.so ../Core/
 fi
 
-#python main.py irc.hiddenaces.net 6667 \#loic
+python main.py irc.hiddenaces.net 6667 \#loic
