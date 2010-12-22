@@ -28,9 +28,9 @@ class Flooder:
         self.socks5port = socks5port
         self.byteCount = Value('i', 0)
 
-        if host == "127.0.0.1" or host == "localhost":
+        if socket.gethostbyname(host).split('.')[0] == '127':
             print "Is someone being funny again? I'm not going to DDoS myself"
-
+            self.initsuccess = False
 
         try:
             if method.index(TCP_METHOD) != -1:
