@@ -1,16 +1,13 @@
-import socket, time
+import socks, time
 from Functions import *
 from multiprocessing import Process
-
-# Thanks to _entropy
 
 class HTTPWorkerThread(Process):
 
     def __init__(self, flooder, id):
         Process.__init__(self)
         self.id = id
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_IP)
-        self.socket.setblocking(1)
+        self.socket = socks.socksocket()
 
         self.host = flooder.host
         self.port = flooder.port
@@ -76,7 +73,7 @@ class HTTPWorkerThread(Process):
                 except Exception, e:
                     if e.args[0] == 32 or e.args[0] == 104:
                         #print "thread", self.id ,"connection broken, retrying."
-                        self.socket = socket.socket()
+                        self.socket = socks.socksocket()
                     #print "Couldn't send message on thread", self.id, "because", e.args
                     time.sleep(0.1)
                     pass
