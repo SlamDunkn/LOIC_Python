@@ -57,11 +57,11 @@ class HTTPWorkerThread(Process):
     def checkProxyAlive(self):
         proxyalive = True
         s = socks.socksocket()
-        print "testing proxy connection %s:%d" % (self.socks5ip, self.socks5port)
+        #print "testing proxy connection %s:%d" % (self.socks5ip, self.socks5port)
         try:
             s.connect((self.socks5ip, self.socks5port))
         except Exception, e:
-            print "thread", self.id, "Proxy seems down %s:%d" % (self.socks5ip, self.socks5port)
+            #print "thread", self.id, "Proxy seems down %s:%d" % (self.socks5ip, self.socks5port)
             proxyalive = False
         s.close()
         return proxyalive
@@ -73,10 +73,10 @@ class HTTPWorkerThread(Process):
                     try:
                         if self.socks5ip is not None and self.socks5port is not None:
                             if self.checkProxyAlive():
-                                print "thread", self.id, "using socks5 proxy %s %d" % (self.socks5ip, self.socks5port)
+                                #print "thread", self.id, "using socks5 proxy %s %d" % (self.socks5ip, self.socks5port)
                                 self.socket.setproxy(socks.PROXY_TYPE_SOCKS5, self.socks5ip, self.socks5port)
                         self.socket.connect((self.host, self.port))
-                        print "thread", self.id, "connected"
+                        #print "thread", self.id, "connected"
                         break
                     except Exception, e:
                         if e.args[0] == 106 or e.args[0] == 60:
