@@ -122,7 +122,7 @@ def lazerParseHook(event):
         status = WAITING
 
 def lazerStartHook(event):
-    global status, flooder, targetip, timeout, subsite, message, port, method, threads, wait, random, speed, socks5ip, socks5port
+    global status, flooder, targetip, timeout, subsite, message, port, method, threads, wait, random, speed, srchost, srcport, socks5ip, socks5port
     print "FIRING MAH LAZ000000R!"
     if status == START:
         if flooder != None:
