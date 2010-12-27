@@ -163,12 +163,9 @@ class main(QMainWindow):
         self.srchost = "192.168.0.1"
         self.srcport = 4321
 
-        listener = Listener(LAZER_RECV, self.lazerParseHook)
-        getEventManager().addListener(listener)
-        listener = Listener(START_LAZER, self.lazerStartHook)
-        getEventManager().addListener(listener)
-        listener = Listener(IRC_RESTART, self.restartIRCHook)
-        getEventManager().addListener(listener)
+        getEventManager().addListener(LAZER_RECV, self.lazerParseHook)
+        getEventManager().addListener(START_LAZER, self.lazerStartHook)
+        getEventManager().addListener(IRC_RESTART, self.restartIRCHook)
 
         getEventManager().start()
 
@@ -260,7 +257,7 @@ class main(QMainWindow):
         self.srchost = str(tab.srchost.text())
         self.srcport = int(tab.srcport.text())
 
-        self.flooder = Flooder(self.targetip, self.port, self.timeout, self.method, self.threads, self.subsite, self.message, self.random, self.wait, self.srchost, self.srcport)
+        self.flooder = Flooder(self.targetip, self.port, self.timeout, self.method, self.threads, self.subsite, self.message, self.random, self.wait, self.srchost, self.srcport, "127.0.0.1", 9050)
         self.flooder.start()
 
     def lazerParseHook(self, event):
@@ -382,7 +379,7 @@ class main(QMainWindow):
                 print "Missing required thread amount"
                 return
 
-            self.flooder = Flooder(self.targetip, self.port, self.timeout, self.method, self.threads, self.subsite, self.message, self.random, self.wait, self.srchost, self.srcport)
+            self.flooder = Flooder(self.targetip, self.port, self.timeout, self.method, self.threads, self.subsite, self.message, self.random, self.wait, self.srchost, self.srcport, "127.0.0.1", 9050)
             self.flooder.start()
 
     def restartIRCHook(self, event):

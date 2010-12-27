@@ -44,8 +44,7 @@ class IRC:
         self.ops = []
         print "Nick:", self.nick
 
-        listener = Listener(IRC_RECV, self.parseIRCString)
-        getEventManager().addListener(listener)
+        getEventManager().addListener(IRC_RECV, self.parseIRCString)
 
         self.connect()
 
