@@ -68,7 +68,7 @@ class Flooder:
             return
 
         x = 0
-        while len(self.__processes) < self.threadsAmount:
+        while len(self.__processes) < self.threadsAmount and x < 2*self.threadsAmount:
             p = None
             if self.method[x%len(self.method)] == TCP_METHOD:
 	            p = TCPWorkerThread(self, self.threadId)
