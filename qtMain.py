@@ -162,6 +162,7 @@ class main(QMainWindow):
         self.random = False
         self.srchost = "192.168.0.1"
         self.srcport = 4321
+        self.status = WAITING
 
         getEventManager().addListener(LAZER_RECV, self.lazerParseHook)
         getEventManager().addListener(START_LAZER, self.lazerStartHook)
@@ -361,6 +362,7 @@ class main(QMainWindow):
             self.status = WAITING
 
     def lazerStartHook(self, event):
+        print "starting lazor"
         if self.status == START:
             if self.flooder != None:
                 self.flooder.stop()
