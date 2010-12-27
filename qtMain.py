@@ -163,12 +163,9 @@ class main(QMainWindow):
         self.srchost = "192.168.0.1"
         self.srcport = 4321
 
-        listener = Listener(LAZER_RECV, self.lazerParseHook)
-        getEventManager().addListener(listener)
-        listener = Listener(START_LAZER, self.lazerStartHook)
-        getEventManager().addListener(listener)
-        listener = Listener(IRC_RESTART, self.restartIRCHook)
-        getEventManager().addListener(listener)
+        getEventManager().addListener(LAZER_RECV, self.lazerParseHook)
+        getEventManager().addListener(START_LAZER, self.lazerStartHook)
+        getEventManager().addListener(IRC_RESTART, self.restartIRCHook)
 
         getEventManager().start()
 

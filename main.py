@@ -156,12 +156,9 @@ def restartIRCHook(event):
 def main(args):
     global irc, flooder, socks5ip, socks5port
 
-    listener = Listener(LAZER_RECV, lazerParseHook)
-    getEventManager().addListener(listener)
-    listener = Listener(START_LAZER, lazerStartHook)
-    getEventManager().addListener(listener)
-    listener = Listener(IRC_RESTART, restartIRCHook)
-    getEventManager().addListener(listener)
+    getEventManager().addListener(LAZER_RECV, lazerParseHook)
+    getEventManager().addListener(START_LAZER, lazerStartHook)
+    getEventManager().addListener(IRC_RESTART, restartIRCHook)
 
     try:
         host = args[1]
