@@ -1,11 +1,17 @@
 from multiprocessing import Queue, Value
+import socket
 from Events import *
 from Globals import *
-from UDPWorkerThread import *
-from TCPWorkerThread import *
-from SYNWorkerThread import *
-from HTTPWorkerThread import *
-import synmod
+from Functions import *
+from UDPWorkerThread import UDPWorkerThread
+from TCPWorkerThread import TCPWorkerThread
+from HTTPWorkerThread import HTTPWorkerThread
+try:
+    import synmod
+except ImportError:
+    print "Couldn't load synmod, have you compiled it? (if you're on windows, ignore this message)"
+else:
+    from SYNWorkerThread import SYNWorkerThread
 
 class Flooder:
 
@@ -56,7 +62,8 @@ class Flooder:
                 else:
                     method.remove(SYN_METHOD)
         except:
-            pass
+            if SYN_METHOD in method != -1:
+                method.remove(SYN_METHOD)
 
 
         if len(method) == 0:
