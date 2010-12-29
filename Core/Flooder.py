@@ -50,8 +50,6 @@ class Flooder:
 
         try:
             if method.index(SYN_METHOD) != -1:
-                srchost = ".".join(str(random.randrange(1, 255)) for i in range(4))
-                srcport = random.randrange(1024, 65534)
                 ret = synmod.init(srchost, srcport, host, port)
                 if ret != -1:
                     print "synmod init success"
