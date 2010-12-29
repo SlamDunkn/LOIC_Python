@@ -184,7 +184,7 @@ def main(args):
                     socks5ip = socket.gethostbyname(socks5[0])
                     socks5port = int(socks5[1])
 
-    except getopt.GetoptError:
+    except (ValueError, IndexError):
         print "Usage: python main.py <hivemind irc server> <irc port> <irc channel> [--tor] [--socks5=ip:port]"
         sys.exit()
 
