@@ -50,7 +50,11 @@ def lazerParseHook(event):
 
     for x in range(0, len(s), 2):
         if s[x] == "targetip" or s[x] == "targethost":
-            targetip = socket.gethostbyname(s[x+1])
+            try:
+                targetip = socket.gethostbyname(s[x+1])
+            except socket.gaierror, err:
+                print "Can't resolve hostname %s: %s" % (s[x+1], err[1])
+                sys.exit() 
         elif s[x] == "timeout":
             if s[x+1].isdigit():
                 timeout = int(s[x+1])
