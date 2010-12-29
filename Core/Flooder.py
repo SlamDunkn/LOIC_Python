@@ -6,12 +6,16 @@ from Functions import *
 from UDPWorkerThread import UDPWorkerThread
 from TCPWorkerThread import TCPWorkerThread
 from HTTPWorkerThread import HTTPWorkerThread
+
+synMod = False
+
 try:
     import synmod
 except ImportError:
     print "Couldn't load synmod, have you compiled it? (if you're on windows, ignore this message)"
 else:
     from SYNWorkerThread import SYNWorkerThread
+    synMod = True
 
 class Flooder:
 

@@ -67,11 +67,12 @@ class manualTab(QWidget):
         layout.addWidget(QLabel("message:"), 2, 0)
         layout.addWidget(self.message, 2, 1)
 
-        layout.addWidget(QLabel("SYN IP Spoof:"), 3, 0)
-        layout.addWidget(self.srchost, 3, 1)
+        if synMod:
+            layout.addWidget(QLabel("SYN IP Spoof:"), 3, 0)
+            layout.addWidget(self.srchost, 3, 1)
 
-        layout.addWidget(QLabel("SYN port Spoof:"), 4, 0)
-        layout.addWidget(self.srcport, 4, 1)
+            layout.addWidget(QLabel("SYN port Spoof:"), 4, 0)
+            layout.addWidget(self.srcport, 4, 1)
 
         wrapWidget = QWidget()
         wrapLayout = QGridLayout()
@@ -79,7 +80,8 @@ class manualTab(QWidget):
         wrapLayout.addWidget(self.tcpMethod, 0, 0)
         wrapLayout.addWidget(self.udpMethod, 0, 1)
         wrapLayout.addWidget(self.httpMethod, 0, 2)
-        wrapLayout.addWidget(self.synMethod, 0, 3)
+        if synMod:
+            wrapLayout.addWidget(self.synMethod, 0, 3)
 
         wrapWidget.setLayout(wrapLayout)
 
