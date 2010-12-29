@@ -114,7 +114,7 @@ static PyObject * synmod_init(PyObject *self, PyObject* args)
         return PyInt_FromLong(0L);;
     }
 
-    printf("Using src %s:%i dest %s:%i\r\n", src_addr, src_port, dest_addr, dest_port);
+    /* printf("Using src %s:%i dest %s:%i\r\n", src_addr, src_port, dest_addr, dest_port); */
 
     ok = inet_pton(AF_INET, src_addr, &conv_src_addr);
 
